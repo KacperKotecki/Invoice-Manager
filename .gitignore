@@ -1,0 +1,68 @@
+# Pliki generowane przez Visual Studio i IDE (np. Rider)
+*.sln.DotSettings.user
+*.suo
+*.user
+.vs/
+.idea/
+
+# Foldery kompilacji (Binaries)
+[Bb]in/
+[Oo]bj/
+[Rr]elease/
+[Dd]ebug/
+
+# Pliki zasobów generowane w trakcie budowania
+Properties/Resources.Designer.cs
+
+# Pliki specyficzne dla Entity Framework
+*.Context.cs
+*.Designer.cs
+*.edmx
+*.EDMX.designer.cs
+MigrationHistory/
+*.mdf
+*.ldf
+
+# Pliki specyficzne dla ASP.NET MVC
+App_Data/
+Content/themes/base/images
+Content/themes/base/jquery.ui.autocomplete.css
+Content/themes/base/jquery.ui.datepicker.css
+Content/themes/base/jquery.ui.dialog.css
+Content/themes/base/jquery.ui.progressbar.css
+Content/themes/base/jquery.ui.resizable.css
+Content/themes/base/jquery.ui.selectable.css
+Content/themes/base/jquery.ui.slider.css
+Content/themes/base/jquery.ui.tabs.css
+ContentCSS/
+Scripts/jquery-*.min.js
+Scripts/jquery-*.js
+Scripts/jquery-ui-*.js
+Scripts/jquery-ui-*.min.js
+Scripts/jquery.unobtrusive-ajax.js
+Scripts/jquery.unobtrusive-ajax.min.js
+Scripts/jquery.validate.js
+Scripts/jquery.validate.min.js
+Scripts/jquery.validate.unobtrusive.js
+Scripts/jquery.validate.unobtrusive.min.js
+Scripts/MicrosoftAjax.js
+Scripts/MicrosoftAjax.debug.js
+Scripts/MicrosoftMvcAjax.js
+Scripts/MicrosoftMvcAjax.debug.js
+Scripts/MicrosoftMvcValidation.js
+Scripts/MicrosoftMvcValidation.debug.js
+
+# Pakiety NuGet
+packages/
+*.nupkg
+
+# Pliki związane z testami
+TestResults/
+*.cache
+*.trx
+
+# Inne pliki systemowe
+_ReSharper*/
+$RECYCLE.BIN/
+[Tt]humbs.db
+desktop.ini
