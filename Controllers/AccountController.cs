@@ -9,6 +9,7 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Invoice_Manager.Models;
+using Invoice_Manager.Models.Domains;
 
 namespace Invoice_Manager.Controllers
 {
@@ -151,7 +152,13 @@ namespace Invoice_Manager.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+                var company = new Company
+                {
+                    CompanyName = $"Firma {model.Email}",
+                    Email = model.Email
+                };
+
+                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, Company = company };
                 var result = await UserManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -163,7 +170,8 @@ namespace Invoice_Manager.Controllers
                     // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
                     // await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
 
-                    return RedirectToAction("Index", "Home");
+                    // Redirect to a page where user can complete their company profile
+                    return RedirectToAction("CompanyProfile", "Manage");
                 }
                 AddErrors(result);
             }

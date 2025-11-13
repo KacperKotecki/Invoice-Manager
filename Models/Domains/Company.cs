@@ -23,27 +23,21 @@ namespace Invoice_Manager.Models.Domains
         [MaxLength(255)]
         public string CompanyName { get; set; }
 
-        [Required]
         [MaxLength(30)]
         public string TaxId { get; set; }
 
-        [Required]
         [MaxLength(255)]
         public string Street { get; set; }
 
-        [Required]
         [MaxLength(100)]
         public string City { get; set; }
 
-        [Required]
         [MaxLength(20)]
         public string PostalCode { get; set; }
 
-        [Required]
         [MaxLength(100)]
         public string Country { get; set; }
 
-        [Required]
         [MaxLength(50)]
         public string BankAccount { get; set; }
 
@@ -52,6 +46,8 @@ namespace Invoice_Manager.Models.Domains
 
         [MaxLength(50)]
         public string Phone { get; set; }
+
+        public bool IsProfileComplete { get; set; }
 
         public virtual ICollection<ApplicationUser> Users { get; set; } // w przypadku rozbudowy gdy do jednej firmy może należeć wielu użytkowników na ten moment raczej będzie tylko jedna osoba do jednej firmy 
         public virtual ICollection<Client> Clients { get; set; }

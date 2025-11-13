@@ -168,12 +168,21 @@
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
+    <Compile Include="Filters\CheckProfileCompletionAttribute.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\202511102340046_Init.cs" />
-    <Compile Include="Migrations\202511102340046_Init.Designer.cs">
-      <DependentUpon>202511102340046_Init.cs</DependentUpon>
+    <Compile Include="Migrations\202511131350313_InitialCreate.cs" />
+    <Compile Include="Migrations\202511131350313_InitialCreate.Designer.cs">
+      <DependentUpon>202511131350313_InitialCreate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202511131419434_MakeCompanyDetailsOptional.cs" />
+    <Compile Include="Migrations\202511131419434_MakeCompanyDetailsOptional.Designer.cs">
+      <DependentUpon>202511131419434_MakeCompanyDetailsOptional.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202511131517483_AddIsProfileCompleteToCompany.cs" />
+    <Compile Include="Migrations\202511131517483_AddIsProfileCompleteToCompany.Designer.cs">
+      <DependentUpon>202511131517483_AddIsProfileCompleteToCompany.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Domains\Client.cs" />
@@ -187,6 +196,7 @@
     <Compile Include="Models\ViewModels\AddPhoneNumberViewModel.cs" />
     <Compile Include="Models\Domains\ApplicationUser.cs" />
     <Compile Include="Models\ViewModels\ChangePasswordViewModel.cs" />
+    <Compile Include="Models\ViewModels\CompleteProfileViewModel.cs" />
     <Compile Include="Models\ViewModels\FactorViewModel.cs" />
     <Compile Include="Models\ViewModels\ForgotPasswordViewModel.cs" />
     <Compile Include="Models\ViewModels\ExternalLoginConfirmationViewModel.cs" />
@@ -277,6 +287,7 @@
     <Content Include="Views\Manage\VerifyPhoneNumber.cshtml" />
     <Content Include="Views\Shared\Lockout.cshtml" />
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
+    <Content Include="Views\Manage\CompanyProfile.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -309,8 +320,14 @@
     <Content Include="Scripts\jquery-3.7.1.min.map" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\202511102340046_Init.resx">
-      <DependentUpon>202511102340046_Init.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\202511131350313_InitialCreate.resx">
+      <DependentUpon>202511131350313_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202511131419434_MakeCompanyDetailsOptional.resx">
+      <DependentUpon>202511131419434_MakeCompanyDetailsOptional.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202511131517483_AddIsProfileCompleteToCompany.resx">
+      <DependentUpon>202511131517483_AddIsProfileCompleteToCompany.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

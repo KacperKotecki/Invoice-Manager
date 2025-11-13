@@ -7,6 +7,9 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Invoice_Manager.Models;
+using System.Data.Entity;
+using Invoice_Manager.Models.Domains;
+using Invoice_Manager.Models.ViewModels;
 
 namespace Invoice_Manager.Controllers
 {
@@ -322,6 +325,80 @@ namespace Invoice_Manager.Controllers
             return result.Succeeded ? RedirectToAction("ManageLogins") : RedirectToAction("ManageLogins", new { Message = ManageMessageId.Error });
         }
 
+        //
+        // GET: /Manage/CompanyProfile
+        public async Task<ActionResult> CompanyProfile()
+        {
+            var userId = User.Identity.GetUserId();
+            var user = await UserManager.Users.Include(u => u.Company)
+                                              .SingleOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null || user.Company == null)
+            {
+                return View("Error");
+            }
+
+            var viewModel = new CompleteProfileViewModel
+            {
+                CompanyName = user.Company.CompanyName,
+                TaxId = user.Company.TaxId,
+                Street = user.Company.Street,
+                City = user.Company.City,
+                PostalCode = user.Company.PostalCode,
+                Country = user.Company.Country,
+                BankAccount = user.Company.BankAccount,
+                Email = user.Company.Email,
+                Phone = user.Company.Phone
+            };
+
+            return View(viewModel);
+        }
+
+        //
+        // POST: /Manage/CompanyProfile
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> CompanyProfile(CompleteProfileViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var userId = User.Identity.GetUserId();
+            var user = await UserManager.Users.Include(u => u.Company)
+                                              .SingleOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null || user.Company == null)
+            {
+                return View("Error");
+            }
+
+            user.Company.CompanyName = model.CompanyName;
+            user.Company.TaxId = model.TaxId;
+            user.Company.Street = model.Street;
+            user.Company.City = model.City;
+            user.Company.PostalCode = model.PostalCode;
+            user.Company.Country = model.Country;
+            user.Company.BankAccount = model.BankAccount;
+            user.Company.Email = model.Email;
+            user.Company.Phone = model.Phone;
+            user.Company.IsProfileComplete = true;
+
+            var result = await UserManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                ViewBag.StatusMessage = "Dane firmy zostały zaktualizowane.";
+                
+                return View(model);
+            }
+
+            AddErrors(result);
+            return View(model);
+        }
+
+
         protected override void Dispose(bool disposing)
         {
             if (disposing && _userManager != null)
@@ -381,6 +458,7 @@ namespace Invoice_Manager.Controllers
             SetPasswordSuccess,
             RemoveLoginSuccess,
             RemovePhoneSuccess,
+            ProfileUpdateSuccess,
             Error
         }
 
