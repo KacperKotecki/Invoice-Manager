@@ -16,7 +16,6 @@ Properties/Resources.Designer.cs
 
 # Pliki specyficzne dla Entity Framework
 *.Context.cs
-*.Designer.cs
 *.edmx
 *.EDMX.designer.cs
 MigrationHistory/
