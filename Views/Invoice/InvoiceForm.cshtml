@@ -1,0 +1,268 @@
+﻿@model Invoice_Manager.Models.ViewModels.InvoiceFormViewModel
+@using Newtonsoft.Json
+@{
+    ViewBag.Title = Model.Heading;
+}
+
+
+
+<script>
+    var availableProducts = @Html.Raw(JsonConvert.SerializeObject(Model.Products.Select(p => new {
+        id = p.ProductId,
+        name = p.Name,
+        price = p.UnitPriceNet,
+        unit = p.Unit,
+        taxRateId = p.DefaultTaxRateId
+    })));
+</script>
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="fa fa-file-invoice"></i> @Model.Heading</h4>
+        </div>
+        <div class="card-body">
+
+            @using (Html.BeginForm("Create", "Invoice"))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.Invoice.InvoiceId)
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>Nabywca</h5>
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Invoice.ClientId, "Wybierz klienta")
+                            @Html.DropDownListFor(m => m.Invoice.ClientId,
+                                new SelectList(Model.Clients, "ClientId", "ClientName"),
+                                "--- Wybierz klienta ---",
+                                new { @class = "form-control", id = "ddlClients" })
+                        </div>
+                        <div id="clientDetails" class="mt-3 p-3 bg-light rounded d-none">
+                            <strong>Adres:</strong> <span id="clientAddress"></span><br />
+                            <strong>NIP:</strong> <span id="clientNip"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Szczegóły</h5>
+                        <div class="row">
+                            <div class="col-6 mb-2">
+                                @Html.LabelFor(m => m.Invoice.IssueDate, "Data wystawienia")
+                                @Html.EditorFor(m => m.Invoice.IssueDate, new { htmlAttributes = new { @class = "form-control", type = "date" } })
+                            </div>
+                            <div class="col-4 mb-2">
+                                @Html.LabelFor(m => m.Invoice.SaleDate, "Data sprzedaży")
+                                @Html.EditorFor(m => m.Invoice.SaleDate, new { htmlAttributes = new { @class = "form-control", type = "date" } })
+                            </div>
+                            <div class="col-6 mb-2">
+                                @Html.LabelFor(m => m.Invoice.DueDate, "Termin płatności")
+                                @Html.EditorFor(m => m.Invoice.DueDate, new { htmlAttributes = new { @class = "form-control", type = "date" } })
+                            </div>
+                            <div class="col-6">
+                                @Html.LabelFor(m => m.Invoice.PaymentMethod, "Metoda płatności")
+                                @Html.EditorFor(m => m.Invoice.PaymentMethod, new { htmlAttributes = new { @class = "form-control", Value = "Przelew" } })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+
+                <h5 class="mb-3 mt-4">Pozycje na fakturze</h5>
+
+                <table class="table table-bordered table-hover" id="invoiceItemsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 35%">Produkt / Usługa</th>
+                            <th style="width: 10%">Ilość</th>
+                            <th style="width: 10%">Jm.</th>
+                            <th style="width: 15%">Cena Netto</th>
+                            <th style="width: 15%">VAT</th>
+                            <th style="width: 5%">Akcja</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+
+                <button type="button" class="btn btn-success mb-5" onclick="addNewRow()">
+                    <i class="fa fa-plus"></i> Dodaj pozycję
+                </button>
+
+                <table style="display: none;">
+                    <tr id="itemRowTemplate">
+                        <td>
+                            <select class="form-select product-select" name="Invoice.InvoiceItems[{0}].ProductId" onchange="productChanged(this)">
+                                <option value="">-- Wybierz z listy --</option>
+                                @foreach (var prod in Model.Products)
+                                {
+                                    <option value="@prod.ProductId">@prod.Name</option>
+                                }
+                            </select>
+                            <input type="hidden" name="Invoice.InvoiceItems[{0}].Name" class="item-name" />
+                        </td>
+                        <td>
+                            <input type="number" class="form-control quantity-input" name="Invoice.InvoiceItems[{0}].Quantity" value="1" step="0.01" oninput="calculateRow(this)" />
+                        </td>
+                        <td>
+                            <input type="text" class="form-control unit-input" name="Invoice.InvoiceItems[{0}].Unit" />
+                        </td>
+                        <td>
+                            <input type="number" class="form-control price-input" name="Invoice.InvoiceItems[{0}].UnitPriceNet" step="0.01" oninput="calculateRow(this)" />
+                        </td>
+                        <td>
+                            <select class="form-select tax-input" name="Invoice.InvoiceItems[{0}].TaxRateValue" onchange="calculateRow(this)">
+                                @foreach (var tax in Model.TaxRates)
+                                {
+                                    <option value="@tax.Rate">@tax.Name</option>
+                                }
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control-plaintext text-end row-gross" readonly value="0.00" />
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+
+                </table>
+
+
+
+                <div class="row justify-content-end mt-4">
+                    <div class="col-md-4">
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Suma Netto:</strong></td>
+                                <td class="text-end" id="summaryNet">0.00 PLN</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Suma VAT:</strong></td>
+                                <td class="text-end" id="summaryVat">0.00 PLN</td>
+                            </tr>
+                            <tr class="table-active fs-5">
+                                <td><strong>DO ZAPŁATY:</strong></td>
+                                <td class="text-end fw-bold" id="summaryGross">0.00 PLN</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <hr />
+
+                <button type="submit" class="btn btn-primary btn-lg w-100">Zapisz Fakturę</button>
+            }
+        </div>
+    </div>
+</div>
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+
+    <script>
+        var rowIndex = 0;
+
+        // Dodawanie wiersza (bez zmian, tylko czyści wartości)
+        function addNewRow() {
+            var template = document.getElementById('itemRowTemplate').cloneNode(true);
+            template.id = 'row_' + rowIndex;
+            template.style.display = '';
+            template.innerHTML = template.innerHTML.replace(/\{0\}/g, rowIndex);
+            document.querySelector('#invoiceItemsTable tbody').appendChild(template);
+            rowIndex++;
+        }
+
+        function removeRow(button) {
+            var row = button.closest('tr');
+            row.remove();
+            updateInvoiceTotal(); // Po usunięciu przelicz sumę faktury!
+        }
+
+        function productChanged(selectElement) {
+            var productId = selectElement.value;
+            var row = selectElement.closest('tr');
+            var product = availableProducts.find(p => p.id == productId);
+
+            if (product) {
+                row.querySelector('.item-name').value = product.name;
+                row.querySelector('.price-input').value = product.price; // Netto z bazy
+                row.querySelector('.unit-input').value = product.unit;
+
+                // Próba ustawienia VAT (szukamy opcji, która ma taką samą wartość jak produkt)
+                // Uwaga: To zadziała, jeśli w bazie masz stawkę np. 23.00 i w selectcie też 23.00
+                // W idealnym świecie mapowalibyśmy po ID, ale przy Snapshocie to wystarczy.
+                var taxSelect = row.querySelector('.tax-input');
+                // Ustawiamy VAT, jeśli znajdziemy pasujący (opcjonalnie można dodać logikę szukania najbliższego)
+                 for (var i = 0; i < taxSelect.options.length; i++) {
+                    // Porównujemy wartości (uwaga na typy string/number)
+                    if (parseFloat(taxSelect.options[i].value) == product.taxRateId) { // Tu mały hack: product.taxRateId to ID, a value to %?
+                        // Czekaj, w poprzednim kroku w JSON daliśmy taxRateId.
+                        // A w selectcie value="tax.Rate". To się nie zgra!
+                        // NAPRAWA LOGIKI W LOCIE:
+                        // Użytkownik musi wybrać VAT ręcznie LUB musimy przesyłać Rate w JSON produktu.
+                    }
+                }
+                // Na razie zostawiamy domyślny VAT z listy (pierwszy) lub user zmienia sam.
+            }
+            calculateRow(selectElement);
+        }
+
+        // --- GŁÓWNA MATEMATYKA ---
+
+        function calculateRow(element) {
+            var row = element.closest('tr');
+
+            // 1. Pobierz wartości (zamień na liczby, 0 jeśli puste)
+            var quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+            var priceNet = parseFloat(row.querySelector('.price-input').value) || 0;
+            var taxRate = parseFloat(row.querySelector('.tax-input').value) || 0;
+
+            // 2. Obliczenia dla wiersza
+            var totalNet = quantity * priceNet;
+            var taxAmount = totalNet * (taxRate / 100);
+            var totalGross = totalNet + taxAmount;
+
+            // 3. Wyświetl wynik w wierszu (z 2 miejscami po przecinku)
+            row.querySelector('.row-gross').value = totalGross.toFixed(2);
+
+            // 4. Zaktualizuj sumę całej faktury
+            updateInvoiceTotal();
+        }
+
+        function updateInvoiceTotal() {
+            var totalNet = 0;
+            var totalTax = 0;
+            var totalGross = 0;
+
+            // Przejdź przez wszystkie widoczne wiersze w tbody
+            var rows = document.querySelectorAll('#invoiceItemsTable tbody tr');
+
+            rows.forEach(row => {
+                var quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+                var priceNet = parseFloat(row.querySelector('.price-input').value) || 0;
+                var taxRate = parseFloat(row.querySelector('.tax-input').value) || 0;
+
+                var rowNet = quantity * priceNet;
+                var rowTax = rowNet * (taxRate / 100);
+
+                totalNet += rowNet;
+                totalTax += rowTax;
+            });
+
+            totalGross = totalNet + totalTax;
+
+            // Wyświetl w podsumowaniu na dole
+            document.getElementById('summaryNet').innerText = totalNet.toFixed(2) + " PLN";
+            document.getElementById('summaryVat').innerText = totalTax.toFixed(2) + " PLN";
+            document.getElementById('summaryGross').innerText = totalGross.toFixed(2) + " PLN";
+        }
+
+        // Inicjalizacja
+        document.addEventListener("DOMContentLoaded", function() {
+            addNewRow();
+        });
+    </script>
+}

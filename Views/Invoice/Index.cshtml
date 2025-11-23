@@ -108,7 +108,7 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Do zapłaty</h5>
-                <p class="card-text h3">@Model.Stats.AmountToCollect.ToString("C")</p>
+                <p class="card-text h3">@Model.Stats.AmountToCollect.ToString()</p>
             </div>
         </div>
     </div>
@@ -116,7 +116,7 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Przychód (30 dni)</h5>
-                <p class="card-text h3">@Model.Stats.AmountCollectedThisMonth.ToString("C")</p>
+                <p class="card-text h3">@Model.Stats.AmountCollectedThisMonth.ToString()</p>
             </div>
         </div>
     </div>
@@ -180,7 +180,7 @@
                         </small>
                     </div>
                     <div class="text-end">
-                        <div class="invoice-amount">@invoice.TotalGrossAmount.ToString("C")</div>
+                        <div class="invoice-amount">@invoice.TotalGrossAmount.ToString()</div>
                         @* Tutaj będzie menu akcji (...) *@
                     </div>
                 </div>
@@ -189,75 +189,7 @@
     }
 
 
-    <!-- Przykładowa, zakomentowana karta faktury do celów stylowania -->
-    <div class="invoice-card status-Paid bg-body-secondary">
-        <div class="d-flex justify-content-between">
-            <div>
-                <h5 class="mb-1">FV/2024/01/123</h5>
-                <p class="mb-1">Dla: <strong>Comarch Sp. z o.o.</strong></p>
-                <small class="text-muted">Termin płatności: 15.01.2024</small>
-                <small class="text-muted d-block">Status:<strong class="status-label"> status-Paid </strong></small>
-            </div>
-            <div class="text-end">
-                <div class="invoice-amount">12 230,00 zł</div>
-            </div>
-        </div>
     </div>
-    <div class="invoice-card status-Overdue bg-body-secondary">
-        <div class="d-flex justify-content-between">
-            <div>
-                <h5 class="mb-1">FV/2024/01/123</h5>
-                <p class="mb-1">Dla: <strong>Przykładowy Klient Sp. z o.o.</strong></p>
-                <small class="text-muted">Termin płatności: 15.01.2024</small>
-                <small class="text-muted d-block">Status:<strong class="status-label"> Overdue </strong></small>
-            </div>
-            <div class="text-end">
-                <div class="invoice-amount">1 230,00 zł</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="invoice-card status-Sent bg-body-secondary">
-        <div class="d-flex justify-content-between">
-            <div>
-                <h5 class="mb-1">FV/2024/01/123</h5>
-                <p class="mb-1">Dla: <strong>Przykładowy Klient Sp. z o.o.</strong></p>
-                <small class="text-muted">Termin płatności: 15.01.2024</small>
-                <small class="text-muted d-block">Status:<strong class="status-label"> Sent </strong></small>
-            </div>
-            <div class="text-end">
-                <div class="invoice-amount">1 230,00 zł</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="invoice-card status-Draft bg-body-secondary">
-        <div class="d-flex justify-content-between">
-            <div>
-                <h5 class="mb-1">FV/2024/01/123</h5>
-                <p class="mb-1">Dla: <strong>Przykładowy Klient Sp. z o.o.</strong></p>
-                <small class="text-muted">Termin płatności: 15.01.2024</small>
-                <small class="text-muted d-block">Status:<strong class="status-label"> Draft </strong></small>
-            </div>
-            <div class="text-end">
-                <div class="invoice-amount">1 230,00 zł</div>
-            </div>
-        </div>
-    </div>
-    <div class="invoice-card status-Cancelled bg-body-secondary">
-        <div class="d-flex justify-content-between">
-            <div>
-                <h5 class="mb-1">FV/2024/01/123</h5>
-                <p class="mb-1">Dla: <strong>Przykładowy Klient Sp. z o.o.</strong></p>
-                <small class="text-muted">Termin płatności: 15.01.2024</small>
-                <small class="text-muted d-block">Status:<strong class="status-label"> Cancelled </strong></small>
-            </div>
-            <div class="text-end">
-                <div class="invoice-amount">1 230,00 zł</div>
-            </div>
-        </div>
-    </div>
-</div>
 
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")
