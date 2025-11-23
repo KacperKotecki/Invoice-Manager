@@ -1,0 +1,131 @@
+﻿@model Invoice_Manager.Models.ViewModels.ClientIndexViewModel
+
+@{
+    ViewBag.Title = "Baza Klientów";
+}
+
+<style>
+
+    .client-card {
+
+        border-left: 5px solid #ccc;
+        border-left-color: #007bff;
+        border-radius: 8px;
+        padding: 20px;
+        height: 100%;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+        .client-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: #0d6efd; 
+        }
+
+        .client-card h5 {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+    .client-info {
+        font-size: 0.9em;
+        color: white;
+        margin-bottom: 5px;
+    }
+
+    .client-nip {
+        font-weight: 600;
+        color: #555;
+        background-color: #f8f9fa;
+        padding: 5px 6px;
+        border-radius: 4px;
+        display: inline-block;
+        margin-bottom: 10px;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+        <h2 class="text-light">@ViewBag.Title</h2>
+        
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+        <div class="col-md-6">
+            @using (Html.BeginForm("Index", "Client", FormMethod.Get, new { @class = "d-flex gap-2" }))
+            {
+                @Html.TextBoxFor(x => x.SearchQuery, new { @class = "form-control", placeholder = "Szukaj po nazwie, NIP lub email..." })
+                <button type="submit" class="btn btn-primary">Szukaj</button>
+                if (!string.IsNullOrEmpty(Model.SearchQuery))
+                {
+                    <a href="@Url.Action("Index", "Client")" class="btn btn-outline-secondary">Wyczyść</a>
+                }
+            }
+        </div>
+        <div>
+            <a href="@Url.Action("Create", "Client")" class="btn btn-success">
+                <i class="fa fa-plus"></i> Dodaj Klienta
+            </a>
+
+        </div>
+        
+    </div>
+
+    @if (!Model.Clients.Any())
+    {
+        <div class="alert alert-info text-center p-5 bg-body-secondary">
+            <h4>Brak klientów do wyświetlenia</h4>
+            <p>Nie znaleziono klientów spełniających kryteria lub Twoja baza jest pusta.</p>
+            <a href="@Url.Action("Create", "Client")" class="btn btn-sm btn-success mt-2">Dodaj pierwszego klienta</a>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @foreach (var client in Model.Clients)
+            {
+                <div class="col">
+                    <div class="client-card bg-body-secondary">
+                        <div>
+                            <h5>@client.ClientName</h5>
+
+                            @if (!string.IsNullOrEmpty(client.TaxId))
+                            {
+                                <div class="client-nip">NIP: @client.TaxId</div>
+                            }
+                            else
+                            {
+                                <div class="client-nip">Osoba prywatna</div>
+                            }
+
+                            <div class="mt-3">
+                                <p class="client-info">
+                                    <strong>Adres:</strong><br />
+                                    @client.Street<br />
+                                    @client.PostalCode @client.City
+                                </p>
+                                <p class="client-info mt-2">
+                                    <strong>Kontakt:</strong><br />
+                                    Email: @(string.IsNullOrEmpty(client.Email) ? "-" : client.Email)
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                            <a href="@Url.Action("Edit", "Client", new { id = client.ClientId })" class="btn btn-primary btn-sm">
+                                Edytuj
+                            </a>
+
+                            <a href="@Url.Action("Delete", "Client", new { id = client.ClientId })" class="btn btn-danger btn-sm">
+                                Usuń
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
