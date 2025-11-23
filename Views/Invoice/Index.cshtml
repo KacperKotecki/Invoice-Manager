@@ -4,10 +4,39 @@
 @{
     ViewBag.Title = "Panel Główny";
 }
+@functions {
+    // Funkcja pomocnicza do ustalania wyglądu przycisku
+    string GetButtonStyle(bool isActive)
+    {
+        return isActive ? "btn-primary" : "btn-secondary";
+    }
+}
+@functions {
+    string TranslateInvoiceStatus(string status)
+    {
+        switch (status)
+        {
+            case "Draft":
+                return "Robocza";
+            case "Sent":
+                return "Oczekująca"; // lub "Wysłana"
+            case "Paid":
+                return "Opłacona";
+            case "Overdue":
+                return "Po terminie";
+            case "Cancelled":
+                return "Anulowana";
+            default:
+                return status; // Jeśli przyjdzie coś innego, zwróć oryginał
+        }
+    }
+}
+
+
 
 <style>
     .invoice-card {
-        border-left: 5px solid #ccc; 
+        border-left: 5px solid #ccc;
         margin-bottom: 15px;
         padding: 15px;
         border-radius: 5px;
@@ -16,17 +45,51 @@
         position: relative;
     }
 
-    .invoice-card.status-Paid { border-left-color: #28a745; } 
-    .invoice-card.status-Overdue { border-left-color: #dc3545; } 
-    .invoice-card.status-Sent { border-left-color: #007bff; } 
-    .invoice-card.status-Draft { border-left-color: #6c757d; } 
-    .invoice-card.status-Cancelled { border-left-color: #343a40; } 
+        .invoice-card.status-Paid {
+            border-left-color: #28a745;
+        }
+
+            .invoice-card.status-Paid .status-label {
+                color: #28a745;
+            }
+
+        .invoice-card.status-Overdue {
+            border-left-color: #dc3545;
+        }
+
+            .invoice-card.status-Overdue .status-label {
+                color: #dc3545;
+            }
+
+        .invoice-card.status-Sent {
+            border-left-color: #007bff;
+        }
+
+            .invoice-card.status-Sent .status-label {
+                color: #007bff;
+            }
+
+        .invoice-card.status-Draft {
+            border-left-color: #fd7e14;
+        }
+
+            .invoice-card.status-Draft .status-label {
+                color: #fd7e14;
+            }
+
+        .invoice-card.status-Cancelled {
+            border-left-color: #6f42c1;
+        }
+
+            .invoice-card.status-Cancelled .status-label {
+                color: #a57ccf;
+            }
 
     .invoice-amount {
         font-size: 1.2em;
         font-weight: bold;
     }
-    
+
     .filter-buttons .btn.active {
         background-color: #007bff;
         color: white;
@@ -34,7 +97,7 @@
 </style>
 
 
-<div class="d-flex justify-content-between align-items-center mb-4 bg-dark">
+<div class="d-flex justify-content-between align-items-center mb-4 ">
     <h2 class="mb-0 text-white">@ViewBag.Title</h2>
     @Html.ActionLink("Wystaw nową fakturę", "Create", "Invoice", null, new { @class = "btn btn-success btn-lg" })
 </div>
@@ -69,18 +132,28 @@
 
 <!-- Blok 3: Kontrolki (Filtry i Wyszukiwanie) -->
 <div class="mb-3">
-    @using (Html.BeginForm("Index", "Invoice", FormMethod.Get, new { @class="d-flex" }))
+    @using (Html.BeginForm("Index", "Invoice", FormMethod.Get, new { @class = "d-flex" }))
     {
         @Html.TextBox("searchQuery", Model.SearchQuery, new { @class = "form-control me-2", placeholder = "Szukaj po numerze lub kliencie..." })
         <button type="submit" class="btn btn-primary">Szukaj</button>
     }
 </div>
 <div class="mb-4 filter-buttons">
-    @Html.ActionLink("Wszystkie", "Index", "Invoice", new { searchQuery = Model.SearchQuery }, new { @class = "btn " + (Model.ActiveFilter == null ? "btn-primary" : "btn-outline-primary") })
-    @Html.ActionLink("Robocze", "Index", "Invoice", new { status = InvoiceStatus.Draft, searchQuery = Model.SearchQuery }, new { @class = "btn " + (Model.ActiveFilter == InvoiceStatus.Draft ? "btn-primary" : "btn-outline-primary") })
-    @Html.ActionLink("Oczekujące", "Index", "Invoice", new { status = InvoiceStatus.Sent, searchQuery = Model.SearchQuery }, new { @class = "btn " + (Model.ActiveFilter == InvoiceStatus.Sent ? "btn-primary" : "btn-outline-primary") })
-    @Html.ActionLink("Opłacone", "Index", "Invoice", new { status = InvoiceStatus.Paid, searchQuery = Model.SearchQuery }, new { @class = "btn " + (Model.ActiveFilter == InvoiceStatus.Paid ? "btn-primary" : "btn-outline-primary") })
-    @Html.ActionLink("Po terminie", "Index", "Invoice", new { status = InvoiceStatus.Overdue, searchQuery = Model.SearchQuery }, new { @class = "btn " + (Model.ActiveFilter == InvoiceStatus.Overdue ? "btn-danger" : "btn-outline-danger") })
+    @Html.ActionLink("Wszystkie", "Index", "Invoice",
+        new { searchQuery = Model.SearchQuery },
+        new { @class = "btn " + GetButtonStyle(Model.ActiveFilter == null) })
+    @Html.ActionLink("Robocze", "Index", "Invoice",
+        new { status = InvoiceStatus.Draft, searchQuery = Model.SearchQuery },
+        new { @class = "btn " + GetButtonStyle(Model.ActiveFilter == InvoiceStatus.Draft) })
+    @Html.ActionLink("Oczekujące", "Index", "Invoice",
+        new { status = InvoiceStatus.Sent, searchQuery = Model.SearchQuery },
+        new { @class = "btn " + GetButtonStyle(Model.ActiveFilter == InvoiceStatus.Sent) })
+    @Html.ActionLink("Opłacone", "Index", "Invoice",
+        new { status = InvoiceStatus.Paid, searchQuery = Model.SearchQuery },
+        new { @class = "btn " + GetButtonStyle(Model.ActiveFilter == InvoiceStatus.Paid) })
+    @Html.ActionLink("Po terminie", "Index", "Invoice",
+        new { status = InvoiceStatus.Overdue, searchQuery = Model.SearchQuery },
+        new { @class = "btn " + GetButtonStyle(Model.ActiveFilter == InvoiceStatus.Overdue) })
 </div>
 
 
@@ -96,12 +169,15 @@
     {
         foreach (var invoice in Model.Invoices)
         {
-            <div class="invoice-card status-@invoice.Status">
-                <div class="d-flex justify-content-between">
+            <div class="invoice-card status-@invoice.Status bg-body-secondary">
+                <div class="d-flex justify-content-between ">
                     <div>
                         <h5 class="mb-1">@invoice.InvoiceNumber</h5>
                         <p class="mb-1">Dla: <strong>@invoice.ClientName</strong></p>
-                        <small class="text-muted">Termin płatności: @invoice.DueDate.ToShortDateString()</small>
+                        <small class="text-muted d-block">Termin płatności: @invoice.DueDate.ToShortDateString()</small>
+                        <small class="text-muted d-block">Status:
+                            <strong class="status-label"> @TranslateInvoiceStatus(invoice.Status.ToString()) </strong>
+                        </small>
                     </div>
                     <div class="text-end">
                         <div class="invoice-amount">@invoice.TotalGrossAmount.ToString("C")</div>
@@ -114,37 +190,26 @@
 
 
     <!-- Przykładowa, zakomentowana karta faktury do celów stylowania -->
-    <div class="invoice-card status-Overdue">
+    <div class="invoice-card status-Paid bg-body-secondary">
         <div class="d-flex justify-content-between">
             <div>
                 <h5 class="mb-1">FV/2024/01/123</h5>
-                <p class="mb-1">Dla: <strong>Przykładowy Klient Sp. z o.o.</strong></p>
+                <p class="mb-1">Dla: <strong>Comarch Sp. z o.o.</strong></p>
                 <small class="text-muted">Termin płatności: 15.01.2024</small>
+                <small class="text-muted d-block">Status:<strong class="status-label"> status-Paid </strong></small>
             </div>
             <div class="text-end">
-                <div class="invoice-amount">1 230,00 zł</div>
+                <div class="invoice-amount">12 230,00 zł</div>
             </div>
         </div>
     </div>
-    <div class="invoice-card status-Draft">
+    <div class="invoice-card status-Overdue bg-body-secondary">
         <div class="d-flex justify-content-between">
             <div>
                 <h5 class="mb-1">FV/2024/01/123</h5>
                 <p class="mb-1">Dla: <strong>Przykładowy Klient Sp. z o.o.</strong></p>
                 <small class="text-muted">Termin płatności: 15.01.2024</small>
-            </div>
-            <div class="text-end">
-                <div class="invoice-amount">1 230,00 zł</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="invoice-card status-Paid">
-        <div class="d-flex justify-content-between">
-            <div>
-                <h5 class="mb-1">FV/2024/01/123</h5>
-                <p class="mb-1">Dla: <strong>Przykładowy Klient Sp. z o.o.</strong></p>
-                <small class="text-muted">Termin płatności: 15.01.2024</small>
+                <small class="text-muted d-block">Status:<strong class="status-label"> Overdue </strong></small>
             </div>
             <div class="text-end">
                 <div class="invoice-amount">1 230,00 zł</div>
@@ -152,12 +217,13 @@
         </div>
     </div>
 
-    <div class="invoice-card status-Cancelled">
+    <div class="invoice-card status-Sent bg-body-secondary">
         <div class="d-flex justify-content-between">
             <div>
                 <h5 class="mb-1">FV/2024/01/123</h5>
                 <p class="mb-1">Dla: <strong>Przykładowy Klient Sp. z o.o.</strong></p>
                 <small class="text-muted">Termin płatności: 15.01.2024</small>
+                <small class="text-muted d-block">Status:<strong class="status-label"> Sent </strong></small>
             </div>
             <div class="text-end">
                 <div class="invoice-amount">1 230,00 zł</div>
@@ -165,6 +231,32 @@
         </div>
     </div>
 
+    <div class="invoice-card status-Draft bg-body-secondary">
+        <div class="d-flex justify-content-between">
+            <div>
+                <h5 class="mb-1">FV/2024/01/123</h5>
+                <p class="mb-1">Dla: <strong>Przykładowy Klient Sp. z o.o.</strong></p>
+                <small class="text-muted">Termin płatności: 15.01.2024</small>
+                <small class="text-muted d-block">Status:<strong class="status-label"> Draft </strong></small>
+            </div>
+            <div class="text-end">
+                <div class="invoice-amount">1 230,00 zł</div>
+            </div>
+        </div>
+    </div>
+    <div class="invoice-card status-Cancelled bg-body-secondary">
+        <div class="d-flex justify-content-between">
+            <div>
+                <h5 class="mb-1">FV/2024/01/123</h5>
+                <p class="mb-1">Dla: <strong>Przykładowy Klient Sp. z o.o.</strong></p>
+                <small class="text-muted">Termin płatności: 15.01.2024</small>
+                <small class="text-muted d-block">Status:<strong class="status-label"> Cancelled </strong></small>
+            </div>
+            <div class="text-end">
+                <div class="invoice-amount">1 230,00 zł</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
