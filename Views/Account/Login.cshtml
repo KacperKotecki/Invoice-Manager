@@ -1,64 +1,111 @@
 ﻿@using Invoice_Manager.Models
 @model LoginViewModel
 @{
-    ViewBag.Title = "Log in";
+    ViewBag.Title = "Zaloguj się";
 }
 
-<main aria-labelledby="title">
-    <h2 id="title">@ViewBag.Title.</h2>
-    <div class="row">
-        <div class="col-md-8">
-            <section id="loginForm">
-                @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { role = "form" }))
-                {
-                    @Html.AntiForgeryToken()
-                    <h4>Use a local account to log in.</h4>
-                    <hr />
-                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-                    <div class="row">
-                        @Html.LabelFor(m => m.Email, new { @class = "col-md-2 col-form-label" })
-                        <div class="col-md-10">
-                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
-                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
-                        </div>
-                    </div>
-                    <div class="row">
-                        @Html.LabelFor(m => m.Password, new { @class = "col-md-2 col-form-label" })
-                        <div class="col-md-10">
-                            @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
-                            @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="offset-md-2 col-md-10">
-                            <div class="checkbox">
-                                @Html.CheckBoxFor(m => m.RememberMe)
-                                @Html.LabelFor(m => m.RememberMe)
+<style>
+    
+    .login-card .form-label {
+        display: block !important; 
+        margin-bottom: 8px !important; 
+        color: #e0e0e0 !important; 
+        font-weight: 600;
+        position: relative; 
+        top: auto;
+        left: auto;
+    }
+
+   
+    .login-card .card-footer {
+        background-color: #2c3034 !important; 
+        color: #b0b0b0 !important; 
+        border-top: 1px solid #444;
+    }
+
+    .login-card .input-group-text {
+        background-color: #3a3f44;
+        color: #fff;
+        border-color: #444;
+    }
+
+    .login-card .form-control {
+        background-color: #3a3f44;
+        color: #fff;
+        border-color: #444;
+    }
+
+        .login-card .form-control::placeholder {
+            color: #888;
+        }
+</style>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+
+            <div class="card shadow-lg border-0 rounded-lg login-card" style="background-color: #2c3034; color: #fff;">
+
+                <div class="card-header bg-primary text-white text-center p-4">
+                    <h3 class="font-weight-light my-2">
+                        <i class="fa fa-user-circle me-2"></i> Invoice Manager
+                    </h3>
+                    <small>Wprowadź swoje dane, aby kontynuować</small>
+                </div>
+
+                <div class="card-body p-5">
+                    <section id="loginForm">
+                        @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { role = "form" }))
+                        {
+                            @Html.AntiForgeryToken()
+
+                            @Html.ValidationSummary(true, "", new { @class = "alert alert-danger text-center" })
+
+                            <div class="mb-3">
+                                <label class="form-label">Adres Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control ", placeholder = "jankowalski@wp.pl" })
+                                </div>
+                                @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger small" })
                             </div>
-                        </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Hasło</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa fa-lock"></i></span>
+                                    @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "********" })
+                                </div>
+                                @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger small" })
+                            </div>
+
+                            <div class="form-check mb-3">
+                                @Html.CheckBoxFor(m => m.RememberMe, new { @class = "form-check-input" })
+                                @Html.LabelFor(m => m.RememberMe, "Zapamiętaj mnie", new { @class = "form-check-label", style = "color: #e0e0e0;" })
+                            </div>
+
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    Zaloguj się <i class="fa fa-sign-in-alt ms-1"></i>
+                                </button>
+                            </div>
+                        }
+                    </section>
+                </div>
+
+                <div class="card-footer text-center py-3">
+                    <div class="small">
+                        <span>Nie masz jeszcze konta?</span>
+                        <a href="@Url.Action("Register", "Account")" class="fw-bold text-white text-decoration-underline ms-1">
+                            Zarejestruj się tutaj
+                        </a>
                     </div>
-                    <div class="row">
-                        <div class="offset-md-2 col-md-10">
-                            <input type="submit" value="Log in" class="btn btn-outline-dark" />
-                        </div>
-                    </div>
-                    <p>
-                        @Html.ActionLink("Register as a new user", "Register")
-                    </p>
-                    @* Enable this once you have account confirmation enabled for password reset functionality
-                        <p>
-                            @Html.ActionLink("Forgot your password?", "ForgotPassword")
-                        </p>*@
-                }
-            </section>
-        </div>
-        <div class="col-md-4">
-            <section id="socialLoginForm">
-                @Html.Partial("_ExternalLoginsListPartial", new ExternalLoginListViewModel { ReturnUrl = ViewBag.ReturnUrl })
-            </section>
+                </div>
+
+            </div>
         </div>
     </div>
-</main>
+</div>
 
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")
