@@ -5,7 +5,6 @@
     ViewBag.Title = "Panel Główny";
 }
 @functions {
-    // Funkcja pomocnicza do ustalania wyglądu przycisku
     string GetButtonStyle(bool isActive)
     {
         return isActive ? "btn-primary" : "btn-secondary";
@@ -175,22 +174,93 @@
                         <h5 class="mb-1">@invoice.InvoiceNumber</h5>
                         <p class="mb-1">Dla: <strong>@invoice.ClientName</strong></p>
                         <small class="text-muted d-block">Termin płatności: @invoice.DueDate.ToShortDateString()</small>
-                        <small class="text-muted d-block">Status:
+                        <small class="text-muted d-block">
+                            Status:
                             <strong class="status-label"> @TranslateInvoiceStatus(invoice.Status.ToString()) </strong>
                         </small>
                     </div>
-                    <div class="text-end">
+                    <div class="text-end d-flex flex-column justify-content-between">
                         <div class="invoice-amount">@invoice.TotalGrossAmount.ToString()</div>
-                        @* Tutaj będzie menu akcji (...) *@
+                        <div class="d-flex gap-2">
+                            @Html.ActionLink("Edytuj", "Edit", "Invoice", new { id = invoice.InvoiceId }, new { @class = "btn btn-primary btn-sm" })
+                            @Html.ActionLink("Zarejestruj płatność", "Create", "Invoice", null, new { @class = "btn btn-success btn-sm" })
+
+                            <button class="btn btn-danger btn-sm"
+                                    onclick="confirmDelete(@invoice.InvoiceId, '@invoice.InvoiceNumber')">
+                                <i class="fa fa-trash"></i> Usuń
+                            </button>
+                            @Html.ActionLink("Pobierz PDF", "Create", "Invoice", null, new { @class = "btn btn-secondary btn-sm " })
+                        </div>
                     </div>
                 </div>
             </div>
         }
     }
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fa fa-exclamation-triangle"></i> Potwierdź usunięcie</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Czy na pewno chcesz usunąć fakturę <strong id="deleteInvoiceNumber"></strong>?
+                    <br />
+                    <span class="text-muted small">Tej operacji nie można cofnąć (chyba że w bazie).</span>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
 
-
+                    @using (Html.BeginForm("Delete", "Invoice", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" id="deleteInvoiceId" name="id" value="" />
+                        <button type="submit" class="btn btn-danger">Usuń Fakturę</button>
+                    }
+                </div>
+            </div>
+        </div>
     </div>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#mojPopup">
+        Kliknij mnie!
+    </button>
+
+    <div class="modal fade" id="mojPopup" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Witaj!</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+    q
+                <div class="modal-body">
+                    To jest Twój pierwszy, najprostszy modal.
+                    Nie ma tu żadnej magii, tylko HTML i Bootstrap.
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                    <button type="button" class="btn btn-primary">Zapisz (na niby)</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")
+<script>
+    function confirmDelete(id, number) {
+       
+        document.getElementById('deleteInvoiceId').value = id;
+
+       
+        document.getElementById('deleteInvoiceNumber').innerText = number;
+
+        var myModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        myModal.show();
+    }
+</script>
 }

@@ -7,12 +7,23 @@
 
 
 <script>
+   
+
     var availableProducts = @Html.Raw(JsonConvert.SerializeObject(Model.Products.Select(p => new {
         id = p.ProductId,
         name = p.Name,
         price = p.UnitPriceNet,
         unit = p.Unit,
         taxRateId = p.DefaultTaxRateId
+    })));
+
+    var existingItems = @Html.Raw(JsonConvert.SerializeObject(Model.Invoice.InvoiceItems.Select(i => new {
+        ProductId = i.ProductId,
+        Name = i.Name,
+        Quantity = i.Quantity,
+        Unit = i.Unit,
+        UnitPriceNet = i.UnitPriceNet,
+        TaxRateValue = i.TaxRateValue
     })));
 </script>
 
@@ -48,15 +59,18 @@
                         <div class="row">
                             <div class="col-6 mb-2">
                                 @Html.LabelFor(m => m.Invoice.IssueDate, "Data wystawienia")
-                                @Html.EditorFor(m => m.Invoice.IssueDate, new { htmlAttributes = new { @class = "form-control", type = "date" } })
+                                @Html.TextBoxFor(m => m.Invoice.IssueDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                               
                             </div>
                             <div class="col-4 mb-2">
                                 @Html.LabelFor(m => m.Invoice.SaleDate, "Data sprzedaży")
-                                @Html.EditorFor(m => m.Invoice.SaleDate, new { htmlAttributes = new { @class = "form-control", type = "date" } })
+                                @Html.TextBoxFor(m => m.Invoice.SaleDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                               
                             </div>
                             <div class="col-6 mb-2">
                                 @Html.LabelFor(m => m.Invoice.DueDate, "Termin płatności")
-                                @Html.EditorFor(m => m.Invoice.DueDate, new { htmlAttributes = new { @class = "form-control", type = "date" } })
+                                @Html.TextBoxFor(m => m.Invoice.DueDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                                
                             </div>
                             <div class="col-6">
                                 @Html.LabelFor(m => m.Invoice.PaymentMethod, "Metoda płatności")
@@ -71,7 +85,7 @@
                 <h5 class="mb-3 mt-4">Pozycje na fakturze</h5>
 
                 <table class="table table-bordered table-hover" id="invoiceItemsTable">
-                    <thead class="table-light">
+                    <thead class="table-dark">
                         <tr>
                             <th style="width: 35%">Produkt / Usługa</th>
                             <th style="width: 10%">Ilość</th>
@@ -165,20 +179,51 @@
     <script>
         var rowIndex = 0;
 
-        // Dodawanie wiersza (bez zmian, tylko czyści wartości)
-        function addNewRow() {
+        function addNewRow(data = null) {
+
             var template = document.getElementById('itemRowTemplate').cloneNode(true);
             template.id = 'row_' + rowIndex;
             template.style.display = '';
             template.innerHTML = template.innerHTML.replace(/\{0\}/g, rowIndex);
+
             document.querySelector('#invoiceItemsTable tbody').appendChild(template);
+
+            var currentRow = document.getElementById('row_' + rowIndex);
+
+            if (data) {
+
+                if (data.ProductId) {
+                    currentRow.querySelector('.product-select').value = data.ProductId;
+                }
+
+                currentRow.querySelector('.item-name').value = data.Name;
+                currentRow.querySelector('.quantity-input').value = data.Quantity; 
+                currentRow.querySelector('.unit-input').value = data.Unit;        
+                currentRow.querySelector('.price-input').value = data.UnitPriceNet;
+
+                var taxSelect = currentRow.querySelector('.tax-input');
+
+                taxSelect.value = data.TaxRateValue.toFixed(2);
+                if (!taxSelect.value) {
+                   
+                    for (var i = 0; i < taxSelect.options.length; i++) {
+                        if (parseFloat(taxSelect.options[i].value) == data.TaxRateValue) {
+                            taxSelect.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                calculateRow(currentRow.querySelector('.quantity-input'));
+            }
+
             rowIndex++;
         }
 
         function removeRow(button) {
             var row = button.closest('tr');
             row.remove();
-            updateInvoiceTotal(); // Po usunięciu przelicz sumę faktury!
+            updateInvoiceTotal();
         }
 
         function productChanged(selectElement) {
@@ -188,47 +233,26 @@
 
             if (product) {
                 row.querySelector('.item-name').value = product.name;
-                row.querySelector('.price-input').value = product.price; // Netto z bazy
+                row.querySelector('.price-input').value = product.price;
                 row.querySelector('.unit-input').value = product.unit;
 
-                // Próba ustawienia VAT (szukamy opcji, która ma taką samą wartość jak produkt)
-                // Uwaga: To zadziała, jeśli w bazie masz stawkę np. 23.00 i w selectcie też 23.00
-                // W idealnym świecie mapowalibyśmy po ID, ale przy Snapshocie to wystarczy.
-                var taxSelect = row.querySelector('.tax-input');
-                // Ustawiamy VAT, jeśli znajdziemy pasujący (opcjonalnie można dodać logikę szukania najbliższego)
-                 for (var i = 0; i < taxSelect.options.length; i++) {
-                    // Porównujemy wartości (uwaga na typy string/number)
-                    if (parseFloat(taxSelect.options[i].value) == product.taxRateId) { // Tu mały hack: product.taxRateId to ID, a value to %?
-                        // Czekaj, w poprzednim kroku w JSON daliśmy taxRateId.
-                        // A w selectcie value="tax.Rate". To się nie zgra!
-                        // NAPRAWA LOGIKI W LOCIE:
-                        // Użytkownik musi wybrać VAT ręcznie LUB musimy przesyłać Rate w JSON produktu.
-                    }
-                }
-                // Na razie zostawiamy domyślny VAT z listy (pierwszy) lub user zmienia sam.
             }
             calculateRow(selectElement);
         }
 
-        // --- GŁÓWNA MATEMATYKA ---
-
         function calculateRow(element) {
             var row = element.closest('tr');
 
-            // 1. Pobierz wartości (zamień na liczby, 0 jeśli puste)
             var quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
             var priceNet = parseFloat(row.querySelector('.price-input').value) || 0;
             var taxRate = parseFloat(row.querySelector('.tax-input').value) || 0;
 
-            // 2. Obliczenia dla wiersza
             var totalNet = quantity * priceNet;
             var taxAmount = totalNet * (taxRate / 100);
             var totalGross = totalNet + taxAmount;
 
-            // 3. Wyświetl wynik w wierszu (z 2 miejscami po przecinku)
             row.querySelector('.row-gross').value = totalGross.toFixed(2);
 
-            // 4. Zaktualizuj sumę całej faktury
             updateInvoiceTotal();
         }
 
@@ -237,7 +261,6 @@
             var totalTax = 0;
             var totalGross = 0;
 
-            // Przejdź przez wszystkie widoczne wiersze w tbody
             var rows = document.querySelectorAll('#invoiceItemsTable tbody tr');
 
             rows.forEach(row => {
@@ -254,15 +277,25 @@
 
             totalGross = totalNet + totalTax;
 
-            // Wyświetl w podsumowaniu na dole
             document.getElementById('summaryNet').innerText = totalNet.toFixed(2) + " PLN";
             document.getElementById('summaryVat').innerText = totalTax.toFixed(2) + " PLN";
             document.getElementById('summaryGross').innerText = totalGross.toFixed(2) + " PLN";
         }
 
-        // Inicjalizacja
-        document.addEventListener("DOMContentLoaded", function() {
-            addNewRow();
+        document.addEventListener("DOMContentLoaded", function () {
+
+            if (existingItems && existingItems.length > 0) {
+                
+                existingItems.forEach(function (item) {
+                    addNewRow(item);
+                });
+
+                updateInvoiceTotal();
+            }
+            else {
+
+                addNewRow();
+            }
         });
     </script>
 }
