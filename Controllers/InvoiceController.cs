@@ -11,6 +11,7 @@ using Invoice_Manager.Models.Domains;
 using Invoice_Manager.Models.ViewModels;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
+using Rotativa;
 
 namespace Invoice_Manager.Controllers
 {
@@ -406,6 +407,23 @@ namespace Invoice_Manager.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Index");
+        }
+
+        public async Task<ActionResult> DownloadPdf(int id)
+        {
+            var userId = User.Identity.GetUserId();
+            var user = await _userManager.FindByIdAsync(userId);
+
+            var invoice = await _context.Invoices
+                .Include(i => i.InvoiceItems)
+                .FirstOrDefaultAsync(i => i.InvoiceId == id && i.CompanyId == user.CompanyId);
+
+            if (invoice == null) return HttpNotFound();
+
+            return new ViewAsPdf("InvoicePdf", invoice)
+            {
+                FileName = $"Faktura_{invoice.InvoiceNumber.Replace("/", "_")}.pdf"
+            };
         }
         private async Task<ActionResult> ReloadFormWithErrors(Invoice invoice, int companyId)
         {
