@@ -2,6 +2,7 @@
 @using Newtonsoft.Json
 @{
     ViewBag.Title = Model.Heading;
+    var action = (Model.Invoice.InvoiceId) == 0 ? "Create" : "Edit";
 }
 
 
@@ -25,12 +26,18 @@
         UnitPriceNet = i.UnitPriceNet,
         TaxRateValue = i.TaxRateValue
     })));
+
+    var availableClients = @Html.Raw(JsonConvert.SerializeObject(Model.Clients.Select(c => new{ id = c.ClientId,
+                          addres = $"{c.Street} {c.PostalCode} {c.Country}"})))
 </script>
 
 <div class="container mt-4">
     <div class="card shadow">
         <div class="card-header bg-primary text-white">
-            <h4 class="mb-0"><i class="fa fa-file-invoice"></i> @Model.Heading</h4>
+            <h4 class="mb-0">
+                <i class="fa fa-file-invoice"></i> 
+                @Model.Heading  testowo dodany tekst 
+            </h4>
         </div>
         <div class="card-body">
 
@@ -40,20 +47,22 @@
                 @Html.HiddenFor(m => m.Invoice.InvoiceId)
 
                 <div class="row mb-4">
+                    
                     <div class="col-md-6">
                         <h5>Nabywca</h5>
-                        <div class="form-group">
+                        <div class="form-group" onchange="clientChanged(this)">
                             @Html.LabelFor(m => m.Invoice.ClientId, "Wybierz klienta")
                             @Html.DropDownListFor(m => m.Invoice.ClientId,
                                 new SelectList(Model.Clients, "ClientId", "ClientName"),
                                 "--- Wybierz klienta ---",
                                 new { @class = "form-control", id = "ddlClients" })
                         </div>
-                        <div id="clientDetails" class="mt-3 p-3 bg-light rounded d-none">
-                            <strong>Adres:</strong> <span id="clientAddress"></span><br />
+                        <div class="mt-3 p-3">
+                            <strong>Adres: <span id="clientAddress"></span><br />
                             <strong>NIP:</strong> <span id="clientNip"></span>
                         </div>
                     </div>
+                    
                     <div class="col-md-6">
                         <h5>Szczegóły</h5>
                         <div class="row">
@@ -62,7 +71,7 @@
                                 @Html.TextBoxFor(m => m.Invoice.IssueDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
                                
                             </div>
-                            <div class="col-4 mb-2">
+                            <div class="col-6 mb-2">
                                 @Html.LabelFor(m => m.Invoice.SaleDate, "Data sprzedaży")
                                 @Html.TextBoxFor(m => m.Invoice.SaleDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
                                
@@ -238,6 +247,19 @@
 
             }
             calculateRow(selectElement);
+        }
+        function clientChanged(selectElement) {
+
+            
+
+            var clientId = selectElement.value;
+
+            var client = availableClients.find(c => c.clientId == clientId);
+            var spanaddres = getElementById('clientAddress')
+            spanaddres.value = client
+            alert("Cześć" + client);
+            alert(client);
+
         }
 
         function calculateRow(element) {

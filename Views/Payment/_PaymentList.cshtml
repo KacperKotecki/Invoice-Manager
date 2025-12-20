@@ -1,0 +1,28 @@
+﻿@model IEnumerable<Invoice_Manager.Models.Domains.Payment>
+
+@if (Model.Any())
+{
+    <table class="table table-sm table-bordered table-striped mt-3">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Kwota</th>
+                <th>Metoda</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var payment in Model)
+            {
+                <tr>
+                    <td>@payment.PaymentDate.ToString("dd-MM-yyyy")</td>
+                    <td>@payment.Amount.ToString() zł</td>
+                    <td>@payment.Method</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-light text-center">Brak zarejestrowanych wpłat.</div>
+}

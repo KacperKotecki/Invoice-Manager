@@ -1,39 +1,71 @@
-﻿@model Invoice_Manager.Models.ViewModels.DashboardViewModel
-@using Invoice_Manager.Models.Domains
+﻿@using Invoice_Manager.Models.Domains
+
+@model Invoice_Manager.Models.ViewModels.DashboardViewModel
 
 @{
+
     ViewBag.Title = "Panel Główny";
+
 }
+
 @functions {
+
     string GetButtonStyle(bool isActive)
     {
+
         return isActive ? "btn-primary" : "btn-secondary";
     }
+
 }
+
 @functions {
+
     string TranslateInvoiceStatus(string status)
+
     {
+
         switch (status)
+
         {
+
             case "Draft":
+
                 return "Robocza";
+
             case "Sent":
+
                 return "Oczekująca"; // lub "Wysłana"
+
             case "Paid":
+
                 return "Opłacona";
+
             case "Overdue":
+
                 return "Po terminie";
+
             case "Cancelled":
+
                 return "Anulowana";
+
             default:
-                return status; // Jeśli przyjdzie coś innego, zwróć oryginał
+
+                return status;
+
         }
+
     }
+
 }
+
+
+
+
 
 
 
 <style>
+
     .invoice-card {
         border-left: 5px solid #ccc;
         margin-bottom: 15px;
@@ -43,51 +75,78 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         position: relative;
     }
+    .invoice-card .btn {
+        z-index: 1;
+    }
+
+
 
         .invoice-card.status-Paid {
             border-left-color: #28a745;
         }
 
+
+
             .invoice-card.status-Paid .status-label {
                 color: #28a745;
             }
+
+
 
         .invoice-card.status-Overdue {
             border-left-color: #dc3545;
         }
 
+
+
             .invoice-card.status-Overdue .status-label {
                 color: #dc3545;
             }
+
+
 
         .invoice-card.status-Sent {
             border-left-color: #007bff;
         }
 
+
+
             .invoice-card.status-Sent .status-label {
                 color: #007bff;
             }
+
+
 
         .invoice-card.status-Draft {
             border-left-color: #fd7e14;
         }
 
+
+
             .invoice-card.status-Draft .status-label {
                 color: #fd7e14;
             }
+
+
 
         .invoice-card.status-Cancelled {
             border-left-color: #6f42c1;
         }
 
+
+
             .invoice-card.status-Cancelled .status-label {
                 color: #a57ccf;
             }
+
+
 
     .invoice-amount {
         font-size: 1.2em;
         font-weight: bold;
     }
+
+
 
     .filter-buttons .btn.active {
         background-color: #007bff;
@@ -96,171 +155,386 @@
 </style>
 
 
+
+
+
 <div class="d-flex justify-content-between align-items-center mb-4 ">
     <h2 class="mb-0 text-white">@ViewBag.Title</h2>
-    @Html.ActionLink("Wystaw nową fakturę", "Create", "Invoice", null, new { @class = "btn btn-success" })
+    <button class="btn btn-success" onclick='window.location.href="@Url.Action("Create", "Invoice" )"'>
+        <i class="fa fa-plus"></i>
+        Wystaw nową fakturę 
+    </button>
 </div>
 
-<!-- Blok 2: Pasek Statystyk -->
+
+
+
+
 <div class="row mb-4">
+
     <div class="col-md-4">
+
         <div class="card">
+
             <div class="card-body">
+
                 <h5 class="card-title">Do zapłaty</h5>
-                <p class="card-text h3">@Model.Stats.AmountToCollect.ToString()</p>
+
+                <p class="card-text h3">@Model.Stats.AmountToCollect.ToString() zł</p>
+
             </div>
+
         </div>
+
     </div>
+
     <div class="col-md-4">
+
         <div class="card">
+
             <div class="card-body">
+
                 <h5 class="card-title">Przychód (30 dni)</h5>
-                <p class="card-text h3">@Model.Stats.AmountCollectedThisMonth.ToString()</p>
+
+                <p class="card-text h3">@Model.Stats.AmountCollectedThisMonth.ToString() zł</p>
+
             </div>
+
         </div>
+
     </div>
+
     <div class="col-md-4">
+
         <div class="card">
+
             <div class="card-body">
+
                 <h5 class="card-title">Po terminie</h5>
+
                 <p class="card-text h3">@Model.Stats.OverdueCount</p>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
+
+
 
 <!-- Blok 3: Kontrolki (Filtry i Wyszukiwanie) -->
+
 <div class="mb-3">
+
     @using (Html.BeginForm("Index", "Invoice", FormMethod.Get, new { @class = "d-flex" }))
+
     {
+
         @Html.TextBox("searchQuery", Model.SearchQuery, new { @class = "form-control me-2", placeholder = "Szukaj po numerze lub kliencie..." })
-        <button type="submit" class="btn btn-primary">Szukaj</button>
+
+        <button type="submit" class="btn btn-primary">
+            <i class="fa fa-search"></i>
+            Szukaj
+        </button>
+
     }
+
 </div>
+
 <div class="mb-4 filter-buttons">
+
     @Html.ActionLink("Wszystkie", "Index", "Invoice",
+
         new { searchQuery = Model.SearchQuery },
+
         new { @class = "btn " + GetButtonStyle(Model.ActiveFilter == null) })
+
     @Html.ActionLink("Robocze", "Index", "Invoice",
+
         new { status = InvoiceStatus.Draft, searchQuery = Model.SearchQuery },
+
         new { @class = "btn " + GetButtonStyle(Model.ActiveFilter == InvoiceStatus.Draft) })
+
     @Html.ActionLink("Oczekujące", "Index", "Invoice",
+
         new { status = InvoiceStatus.Sent, searchQuery = Model.SearchQuery },
+
         new { @class = "btn " + GetButtonStyle(Model.ActiveFilter == InvoiceStatus.Sent) })
+
     @Html.ActionLink("Opłacone", "Index", "Invoice",
+
         new { status = InvoiceStatus.Paid, searchQuery = Model.SearchQuery },
+
         new { @class = "btn " + GetButtonStyle(Model.ActiveFilter == InvoiceStatus.Paid) })
+
     @Html.ActionLink("Po terminie", "Index", "Invoice",
+
         new { status = InvoiceStatus.Overdue, searchQuery = Model.SearchQuery },
+
         new { @class = "btn " + GetButtonStyle(Model.ActiveFilter == InvoiceStatus.Overdue) })
+
 </div>
+
+
+
 
 
 <!-- Blok 4: Lista Faktur -->
+
 <div>
-    @if (!Model.Invoices.Any())
-    {
-        <div class="alert alert-info" role="alert">
-            Brak faktur do wyświetlenia. Czas wystawić pierwszą!
-        </div>
-    }
-    else
+
+    @if (Model != null && Model.Invoices.Any())
+
     {
         foreach (var invoice in Model.Invoices)
+
         {
+
             <div class="invoice-card status-@invoice.Status bg-body-secondary">
+
                 <div class="d-flex justify-content-between ">
+
                     <div>
-                        <h5 class="mb-1">@invoice.InvoiceNumber</h5>
+                        <a class="stretched-link text-decoration-none text-body" href="@Url.Action("Edit", "Invoice", new { id = invoice.InvoiceId })">
+                            <h5 >
+                                @invoice.InvoiceNumber
+                            </h5>
+                        </a>
+                        
+
                         <p class="mb-1">Dla: <strong>@invoice.ClientName</strong></p>
+
                         <small class="text-muted d-block">Termin płatności: @invoice.DueDate.ToShortDateString()</small>
+
                         <small class="text-muted d-block">
+
                             Status:
+
                             <strong class="status-label"> @TranslateInvoiceStatus(invoice.Status.ToString()) </strong>
+
                         </small>
+
                     </div>
+
                     <div class="text-end d-flex flex-column justify-content-between">
-                        <div class="invoice-amount">@invoice.TotalGrossAmount.ToString()</div>
+
+                        <div class="invoice-amount">@invoice.TotalGrossAmount.ToString() zł</div>
+
                         <div class="d-flex gap-2">
-                            @Html.ActionLink("Edytuj", "Edit", "Invoice", new { id = invoice.InvoiceId }, new { @class = "btn btn-primary btn-sm" })
-                            @Html.ActionLink("Zarejestruj płatność", "Create", "Invoice", null, new { @class = "btn btn-success btn-sm" })
+
+
+                            <button class="btn btn-success btn-sm"
+                                    data-invoice-id="@invoice.InvoiceId"
+                                    data-invoice-number="@invoice.InvoiceNumber"
+                                    data-invoice-total="@invoice.TotalGrossAmount.ToString()"
+                                    onclick="openPaymentModal(this)">
+                                    <i class="fa fa-credit-card"></i>
+                                    Zarejestruj płatność
+                            </button>
 
                             <button class="btn btn-danger btn-sm"
-                                    onclick="confirmDelete(@invoice.InvoiceId, '@invoice.InvoiceNumber')">
-                                <i class="fa fa-trash"></i> Usuń
+                                    onclick="deleteInvoice(@invoice.InvoiceId, '@invoice.InvoiceNumber')">
+                                    <i class="fa fa-trash"></i> 
+                                    Usuń
                             </button>
-                            @Html.ActionLink("Pobierz PDF", "DownloadPdf", "Invoice", new { id = invoice.InvoiceId }, new { @class = "btn btn-secondary btn-sm" })
+
+                            <button 
+                                class="btn btn-primary btn-sm"
+                                onclick='window.location.href="@Url.Action("DownloadPdf", "Invoice", new { id = invoice.InvoiceId } )"'>
+                                <i class="fa fa-file"></i>
+                                Pobierz PDF
+                            </button>
+                          
                         </div>
                     </div>
                 </div>
             </div>
         }
+
     }
+    else
+    {
+        <div class="alert alert-info" role="alert">
+            Brak faktur do wyświetlenia. Czas wystawić pierwszą!
+        </div>
+    }
+
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+
         <div class="modal-dialog">
+
             <div class="modal-content">
+
                 <div class="modal-header bg-danger text-white">
+
                     <h5 class="modal-title"><i class="fa fa-exclamation-triangle"></i> Potwierdź usunięcie</h5>
+
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
                 </div>
+
                 <div class="modal-body">
+
                     Czy na pewno chcesz usunąć fakturę <strong id="deleteInvoiceNumber"></strong>?
+
                     <br />
+
                     <span class="text-muted small">Tej operacji nie można cofnąć (chyba że w bazie).</span>
+
                 </div>
+
                 <div class="modal-footer">
+
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
 
-                    @using (Html.BeginForm("Delete", "Invoice", FormMethod.Post))
-                    {
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" id="deleteInvoiceId" name="id" value="" />
-                        <button type="submit" class="btn btn-danger">Usuń Fakturę</button>
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#mojPopup">
-        Kliknij mnie!
-    </button>
 
-    <div class="modal fade" id="mojPopup" tabindex="-1" aria-hidden="true">
+
+                    @using (Html.BeginForm("Delete", "Invoice", FormMethod.Post))
+
+                    {
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" id="deleteInvoiceId" name="id" value="" /> // name id powoduje że metoda Delete w contorlrze otrzymuje z niej value 
+
+                        <button type="submit" class="btn btn-danger">Usuń Fakturę</button>
+
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-
-                <div class="modal-header">
-                    <h5 class="modal-title">Witaj!</h5>
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fa fa-money-bill-wave"></i> Zarejestruj płatność</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-    q
                 <div class="modal-body">
-                    To jest Twój pierwszy, najprostszy modal.
-                    Nie ma tu żadnej magii, tylko HTML i Bootstrap.
-                </div>
+                    @using (Html.BeginForm("Add", "Payment", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                    <button type="button" class="btn btn-primary">Zapisz (na niby)</button>
-                </div>
 
+                        <input type="hidden" id="paymentInvoiceId" name="InvoiceId" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Faktura</label>
+                            <input type="text" class="form-control" id="paymentInvoiceNumber" readonly />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Kwota (PLN)</label>
+                                <input type="number" class="form-control" id="paymentAmount" name="Amount" step="0.01" required oninput="validatePaymentAmount()" />
+                                <div id="paymentError" class="text-danger small fw-bold mt-1" style="display:none;"></div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Data wpłaty</label>
+                                <input type="date" class="form-control" name="PaymentDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Metoda</label>
+                            <select class="form-select" name="Method">
+                                <option value="Przelew">Przelew</option>
+                                <option value="Gotówka">Gotówka</option>
+                                <option value="Karta">Karta</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success" id="btnSavePayment">Zapisz wpłatę</button>
+                        </div>
+                    }
+                    <hr />
+                    <h5>Istniejące wpłaty:</h5>
+                    <div id="miejsceNaTabele"></div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
+
     @Scripts.Render("~/bundles/jqueryval")
-<script>
-    function confirmDelete(id, number) {
-       
-        document.getElementById('deleteInvoiceId').value = id;
 
-       
-        document.getElementById('deleteInvoiceNumber').innerText = number;
+    <script>
+        var maxPaymentAmount = 0;
 
-        var myModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-        myModal.show();
-    }
-</script>
+        function deleteInvoice(id, number) {
+            document.getElementById('deleteInvoiceId').value = id;
+            document.getElementById('deleteInvoiceNumber').innerText = number;
+            var myModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            myModal.show();
+        }
+
+
+
+    function openPaymentModal(button) {
+
+        var id = button.getAttribute('data-invoice-id');
+        var number = button.getAttribute('data-invoice-number');
+        var totalGross = button.getAttribute('data-invoice-total');
+
+
+        document.getElementById('paymentInvoiceId').value = id;
+        document.getElementById('paymentInvoiceNumber').value = number;
+        document.getElementById('paymentAmount').value = totalGross;
+        maxPaymentAmount = parseFloat(totalGross);
+
+
+
+    var tableContainer = document.getElementById('miejsceNaTabele');
+    tableContainer.innerHTML = '<div class="text-center">Ładowanie listy wpłat...</div>'; // Informacja dla użytkownika
+
+   fetch('@Url.Action("GetPaymentsForInvoice", "Payment")?invoiceId=' + id)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Błąd sieci');
+            }
+            return response.text();
+        })
+        .then(html => {
+            tableContainer.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Błąd:', error);
+            tableContainer.innerHTML = '<div class="alert alert-danger">Nie udało się pobrać listy wpłat.</div>';
+        });
+
+
+    var myModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+    myModal.show();
+}
+
+
+        function validatePaymentAmount() {
+            var input = document.getElementById('paymentAmount');
+            var errorDiv = document.getElementById('paymentError');
+            var btn = document.getElementById('btnSavePayment');
+            var currentVal = parseFloat(input.value);
+
+            if (currentVal > maxPaymentAmount) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerText = "Maksymalna kwota to: " + maxPaymentAmount.toFixed(2) + " zł";
+                btn.disabled = true;
+            } else {
+                errorDiv.style.display = 'none';
+                btn.disabled = false;
+            }
+        }
+    </script>
 }

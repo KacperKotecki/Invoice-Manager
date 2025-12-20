@@ -173,6 +173,8 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\InvoiceController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
+    <Compile Include="Controllers\PaymentController.cs" />
+    <Compile Include="Models\ViewModels\PaymentFormViewModel.cs" />
     <Compile Include="Controllers\ProductController.cs" />
     <Compile Include="Filters\CheckProfileCompletionAttribute.cs" />
     <Compile Include="Global.asax.cs">
@@ -314,6 +316,7 @@
     <Content Include="Views\Product\Index.cshtml" />
     <Content Include="Views\Invoice\InvoiceForm.cshtml" />
     <Content Include="Views\Invoice\InvoicePdf.cshtml" />
+    <Content Include="Views\Payment\_PaymentList.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

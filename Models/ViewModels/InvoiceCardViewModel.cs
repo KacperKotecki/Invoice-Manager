@@ -1,5 +1,6 @@
+﻿using System;
+using System.Collections.Generic;
 using Invoice_Manager.Models.Domains;
-using System;
 
 namespace Invoice_Manager.Models.ViewModels
 {
@@ -12,5 +13,8 @@ namespace Invoice_Manager.Models.ViewModels
         public string Currency { get; set; }
         public InvoiceStatus Status { get; set; }
         public DateTime DueDate { get; set; }
+
+        public IEnumerable<Payment> Payments { get; set; }
     }
+
 }

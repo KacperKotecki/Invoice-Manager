@@ -56,9 +56,10 @@ namespace Invoice_Manager.Controllers
             };
 
             var query = _context.Invoices
+                .Include(i => i.Payments) 
                 .Where(i => i.CompanyId == companyId);
 
-        
+
             if (!string.IsNullOrWhiteSpace(searchQuery))
             {
                 query = query.Where(i => i.InvoiceNumber.Contains(searchQuery) || i.Client_Name.Contains(searchQuery));
@@ -69,10 +70,9 @@ namespace Invoice_Manager.Controllers
                 query = query.Where(i => i.Status == status.Value);
             }
 
-            // Projekcja i pobranie danych
             var invoices = await query
                 .OrderByDescending(i => i.IssueDate)
-                .Take(30) // Paginacja
+                .Take(30)
                 .Select(i => new InvoiceCardViewModel
                 {
                     InvoiceId = i.InvoiceId,
@@ -81,8 +81,10 @@ namespace Invoice_Manager.Controllers
                     TotalGrossAmount = i.TotalGrossAmount,
                     Currency = i.Currency,
                     Status = i.Status,
-                    DueDate = i.DueDate
-                }).ToListAsync();
+                    DueDate = i.DueDate,
+                    Payments = i.Payments
+                })
+                .ToListAsync();
 
 
             var viewModel = new DashboardViewModel
@@ -129,7 +131,7 @@ namespace Invoice_Manager.Controllers
                 TaxRates = taxRates
             };
 
-            return View("InvoiceForm", viewModel); 
+            return View("InvoiceForm", viewModel);
         }
 
         [HttpPost]
@@ -146,22 +148,22 @@ namespace Invoice_Manager.Controllers
                 if (key.EndsWith("InvoiceNumber") ||
                     key.EndsWith("Currency") ||
                     key.EndsWith("Status") ||
-                    key.Contains("Company_") ||  
-                    key.Contains("Client_") ||   
-                    key.EndsWith("Company") ||  
-                    key.EndsWith("Client"))      
+                    key.Contains("Company_") ||
+                    key.Contains("Client_") ||
+                    key.EndsWith("Company") ||
+                    key.EndsWith("Client"))
                 {
                     ModelState.Remove(key);
                 }
 
-                
+
                 if (key.Contains("InvoiceItems") && key.EndsWith(".Name"))
                 {
                     ModelState.Remove(key);
                 }
             }
 
-            
+
             if (invoice.InvoiceItems == null || !invoice.InvoiceItems.Any())
             {
                 ModelState.AddModelError("", "Faktura musi mieć co najmniej jedną pozycję.");
@@ -169,26 +171,26 @@ namespace Invoice_Manager.Controllers
 
             if (!ModelState.IsValid)
             {
-             
+
                 return await ReloadFormWithErrors(invoice, user.CompanyId);
             }
 
-          
+
 
             invoice.CompanyId = user.CompanyId;
             invoice.Status = InvoiceStatus.Draft;
 
-            
+
             if (string.IsNullOrEmpty(invoice.Currency))
             {
                 invoice.Currency = "PLN";
             }
 
-          
+
             var count = await _context.Invoices.CountAsync(i => i.CompanyId == user.CompanyId) + 1;
             invoice.InvoiceNumber = $"FV/{DateTime.Now.Year}/{DateTime.Now.Month:D2}/{count}";
 
-            
+
             var company = await _context.Companies.FindAsync(user.CompanyId);
             if (company == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest, "Brak profilu firmy");
 
@@ -199,7 +201,7 @@ namespace Invoice_Manager.Controllers
             invoice.Company_PostalCode = company.PostalCode;
             invoice.Company_BankAccount = company.BankAccount;
 
-           
+
             var client = await _context.Clients.FindAsync(invoice.ClientId);
             if (client == null || client.CompanyId != user.CompanyId)
             {
@@ -212,7 +214,7 @@ namespace Invoice_Manager.Controllers
             invoice.Client_City = client.City;
             invoice.Client_PostalCode = client.PostalCode;
 
-            
+
             decimal grandTotalNet = 0;
             decimal grandTotalTax = 0;
             decimal grandTotalGross = 0;
@@ -227,7 +229,7 @@ namespace Invoice_Manager.Controllers
                 grandTotalTax += item.TotalTaxAmount;
                 grandTotalGross += item.TotalGrossAmount;
 
-               
+
                 if (string.IsNullOrEmpty(item.Name) && item.ProductId.HasValue)
                 {
                     var prod = await _context.Products.FindAsync(item.ProductId);
@@ -238,7 +240,7 @@ namespace Invoice_Manager.Controllers
             invoice.TotalNetAmount = grandTotalNet;
             invoice.TotalTaxAmount = grandTotalTax;
             invoice.TotalGrossAmount = grandTotalGross;
-            
+
             _context.Invoices.Add(invoice);
             await _context.SaveChangesAsync();
 
@@ -251,15 +253,15 @@ namespace Invoice_Manager.Controllers
             var user = await _userManager.FindByIdAsync(userId);
             var companyId = user.CompanyId;
 
-           
+
             var invoice = await _context.Invoices
                .Include(i => i.InvoiceItems)
                .FirstOrDefaultAsync(i => i.InvoiceId == id && i.CompanyId == companyId);
 
-           
+
             if (invoice == null)
             {
-                return HttpNotFound(); 
+                return HttpNotFound();
             }
 
             var clients = await _context.Clients
@@ -295,7 +297,7 @@ namespace Invoice_Manager.Controllers
             var userId = User.Identity.GetUserId();
             var user = await _userManager.FindByIdAsync(userId);
 
-           
+
             var keys = ModelState.Keys.Where(k =>
                 k.Contains("Company_") ||
                 k.Contains("Client_") ||
@@ -305,13 +307,13 @@ namespace Invoice_Manager.Controllers
 
             foreach (var key in keys) ModelState.Remove(key);
 
-          
+
             foreach (var key in ModelState.Keys.Where(k => k.Contains("InvoiceItems") && k.EndsWith(".Name")).ToList())
             {
                 ModelState.Remove(key);
             }
 
-           
+
             if (invoice.InvoiceItems == null || !invoice.InvoiceItems.Any())
             {
                 ModelState.AddModelError("", "Faktura musi mieć co najmniej jedną pozycję.");
@@ -337,7 +339,7 @@ namespace Invoice_Manager.Controllers
             var client = await _context.Clients.FindAsync(invoice.ClientId);
             if (client != null && client.CompanyId == user.CompanyId)
             {
-                invoiceInDb.ClientId = invoice.ClientId; 
+                invoiceInDb.ClientId = invoice.ClientId;
                 invoiceInDb.Client_Name = client.ClientName;
                 invoiceInDb.Client_TaxId = client.TaxId;
                 invoiceInDb.Client_Street = client.Street;
@@ -364,7 +366,7 @@ namespace Invoice_Manager.Controllers
                 grandTotalTax += item.TotalTaxAmount;
                 grandTotalGross += item.TotalGrossAmount;
 
-               
+
                 if (string.IsNullOrEmpty(item.Name) && item.ProductId.HasValue)
                 {
                     var prod = await _context.Products.FindAsync(item.ProductId);
@@ -372,12 +374,12 @@ namespace Invoice_Manager.Controllers
                 }
             }
 
-            
+
             invoiceInDb.TotalNetAmount = grandTotalNet;
             invoiceInDb.TotalTaxAmount = grandTotalTax;
             invoiceInDb.TotalGrossAmount = grandTotalGross;
 
-            
+
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Index");
@@ -399,9 +401,9 @@ namespace Invoice_Manager.Controllers
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
 
             }
-            invoice.Status = InvoiceStatus.Cancelled; 
+            invoice.Status = InvoiceStatus.Cancelled;
 
-            
+
             _context.Invoices.Remove(invoice);
 
             await _context.SaveChangesAsync();
