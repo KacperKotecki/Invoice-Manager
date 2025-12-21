@@ -317,6 +317,9 @@
     <Content Include="Views\Invoice\InvoiceForm.cshtml" />
     <Content Include="Views\Invoice\InvoicePdf.cshtml" />
     <Content Include="Views\Payment\_PaymentList.cshtml" />
+    <Content Include="Views\Invoice\_InvoiceHeader.cshtml" />
+    <Content Include="Views\Invoice\_InvoiceItems.cshtml" />
+    <Content Include="Views\Invoice\_InvoiceSummary.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
