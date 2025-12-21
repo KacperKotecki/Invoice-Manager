@@ -1,14 +1,16 @@
 ﻿@model Invoice_Manager.Models.ViewModels.InvoiceFormViewModel
 @using Newtonsoft.Json
+@using Invoice_Manager.Models.Domains
 @{
     ViewBag.Title = Model.Heading;
     var action = (Model.Invoice.InvoiceId) == 0 ? "Create" : "Edit";
+    var isPaid = Model.Invoice.Status == InvoiceStatus.Paid;
 }
 
 
 
 <script>
-   
+
 
     var availableProducts = @Html.Raw(JsonConvert.SerializeObject(Model.Products.Select(p => new {
         id = p.ProductId,
@@ -31,8 +33,8 @@
         id = c.ClientId,
         address = $"{c.Street} {c.PostalCode} {c.Country}",
         taxId = c.TaxId
-    })))              
-   
+    })))
+
 
 </script>
 
@@ -40,7 +42,7 @@
     <div class="card shadow">
         <div class="card-header bg-primary text-white">
             <h4 class="mb-0">
-                <i class="fa fa-file-invoice"></i> 
+                <i class="fa fa-file-invoice"></i>
                 @Model.Heading
             </h4>
         </div>
@@ -71,159 +73,169 @@
                 @Html.Partial("_InvoiceSummary");
 
                 <hr />
+                if (!isPaid)
+                {
+                    <button type="submit" class="btn btn-primary btn-lg w-100">Zapisz Fakturę</button>
+                }
+                else
+                {
+                    <div class="alert alert-warning text-center mt-4">
+                        <i class="fa fa-lock"></i>
+                        <strong>Faktura została opłacona. Edycja jest zablokowana.</strong>
+                    </div>
+                }
 
-                <button type="submit" class="btn btn-primary btn-lg w-100">Zapisz Fakturę</button>
 
             }
         </div>
-
+    </div>
 </div>
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")
 
     <script>
-        var rowIndex = 0;
+                    var rowIndex = 0;
 
-        function addNewRow(data = null) {
+            function addNewRow(data = null) {
 
-            var template = document.getElementById('itemRowTemplate').cloneNode(true);
-            template.id = 'row_' + rowIndex;
-            template.style.display = '';
-            template.innerHTML = template.innerHTML.replace(/\{0\}/g, rowIndex);
+                var template = document.getElementById('itemRowTemplate').cloneNode(true);
+                template.id = 'row_' + rowIndex;
+                template.style.display = '';
+                template.innerHTML = template.innerHTML.replace(/\{0\}/g, rowIndex);
 
-            document.querySelector('#invoiceItemsTable tbody').appendChild(template);
+                document.querySelector('#invoiceItemsTable tbody').appendChild(template);
 
-            var currentRow = document.getElementById('row_' + rowIndex);
+                var currentRow = document.getElementById('row_' + rowIndex);
 
-            if (data) {
+                if (data) {
 
-                if (data.ProductId) {
-                    currentRow.querySelector('.product-select').value = data.ProductId;
-                }
+                    if (data.ProductId) {
+                        currentRow.querySelector('.product-select').value = data.ProductId;
+                    }
 
-                currentRow.querySelector('.item-name').value = data.Name;
-                currentRow.querySelector('.quantity-input').value = data.Quantity; 
-                currentRow.querySelector('.unit-input').value = data.Unit;        
-                currentRow.querySelector('.price-input').value = data.UnitPriceNet;
+                    currentRow.querySelector('.item-name').value = data.Name;
+                    currentRow.querySelector('.quantity-input').value = data.Quantity;
+                    currentRow.querySelector('.unit-input').value = data.Unit;
+                    currentRow.querySelector('.price-input').value = data.UnitPriceNet;
 
-                var taxSelect = currentRow.querySelector('.tax-input');
+                    var taxSelect = currentRow.querySelector('.tax-input');
 
-                taxSelect.value = data.TaxRateValue.toFixed(2);
-                if (!taxSelect.value) {
-                   
-                    for (var i = 0; i < taxSelect.options.length; i++) {
-                        if (parseFloat(taxSelect.options[i].value) == data.TaxRateValue) {
-                            taxSelect.selectedIndex = i;
-                            break;
+                    taxSelect.value = data.TaxRateValue.toFixed(2);
+                    if (!taxSelect.value) {
+
+                        for (var i = 0; i < taxSelect.options.length; i++) {
+                            if (parseFloat(taxSelect.options[i].value) == data.TaxRateValue) {
+                                taxSelect.selectedIndex = i;
+                                break;
+                            }
                         }
                     }
+
+                    calculateRow(currentRow.querySelector('.quantity-input'));
                 }
 
-                calculateRow(currentRow.querySelector('.quantity-input'));
+                rowIndex++;
             }
 
-            rowIndex++;
-        }
-
-        function removeRow(button) {
-            var row = button.closest('tr');
-            row.remove();
-            updateInvoiceTotal();
-        }
-
-        function productChanged(selectElement) {
-            var productId = selectElement.value;
-            var row = selectElement.closest('tr');
-            var product = availableProducts.find(p => p.id == productId);
-
-            if (product) {
-                row.querySelector('.item-name').value = product.name;
-                row.querySelector('.price-input').value = product.price;
-                row.querySelector('.unit-input').value = product.unit;
-
-            }
-            calculateRow(selectElement);
-        }
-        function clientChanged(selectElement) {
-
-            var selectedClientId = selectElement.value;
-            var selectedClient = availableClients.find(c => c.id == selectedClientId);
-
-            var addressDisplayElement = document.getElementById('clientAddress');
-            var taxIdDisplayElement = document.getElementById('clientNip');
-
-            if (selectedClient) {
-                addressDisplayElement.innerText = selectedClient.address;
-                taxIdDisplayElement.innerText = selectedClient.taxId;
-            } else {
-                addressDisplayElement.innerText = "";
-                taxIdDisplayElement.innerText = "";
+            function removeRow(button) {
+                var row = button.closest('tr');
+                row.remove();
+                updateInvoiceTotal();
             }
 
-        }
+            function productChanged(selectElement) {
+                var productId = selectElement.value;
+                var row = selectElement.closest('tr');
+                var product = availableProducts.find(p => p.id == productId);
 
-        function calculateRow(element) {
-            var row = element.closest('tr');
+                if (product) {
+                    row.querySelector('.item-name').value = product.name;
+                    row.querySelector('.price-input').value = product.price;
+                    row.querySelector('.unit-input').value = product.unit;
 
-            var quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
-            var priceNet = parseFloat(row.querySelector('.price-input').value) || 0;
-            var taxRate = parseFloat(row.querySelector('.tax-input').value) || 0;
+                }
+                calculateRow(selectElement);
+            }
+            function clientChanged(selectElement) {
 
-            var totalNet = quantity * priceNet;
-            var taxAmount = totalNet * (taxRate / 100);
-            var totalGross = totalNet + taxAmount;
+                var selectedClientId = selectElement.value;
+                var selectedClient = availableClients.find(c => c.id == selectedClientId);
 
-            row.querySelector('.row-gross').value = totalGross.toFixed(2);
+                var addressDisplayElement = document.getElementById('clientAddress');
+                var taxIdDisplayElement = document.getElementById('clientNip');
 
-            updateInvoiceTotal();
-        }
+                if (selectedClient) {
+                    addressDisplayElement.innerText = selectedClient.address;
+                    taxIdDisplayElement.innerText = selectedClient.taxId;
+                } else {
+                    addressDisplayElement.innerText = "";
+                    taxIdDisplayElement.innerText = "";
+                }
 
-        function updateInvoiceTotal() {
-            var totalNet = 0;
-            var totalTax = 0;
-            var totalGross = 0;
+            }
 
-            var rows = document.querySelectorAll('#invoiceItemsTable tbody tr');
+            function calculateRow(element) {
+                var row = element.closest('tr');
 
-            rows.forEach(row => {
                 var quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
                 var priceNet = parseFloat(row.querySelector('.price-input').value) || 0;
                 var taxRate = parseFloat(row.querySelector('.tax-input').value) || 0;
 
-                var rowNet = quantity * priceNet;
-                var rowTax = rowNet * (taxRate / 100);
+                var totalNet = quantity * priceNet;
+                var taxAmount = totalNet * (taxRate / 100);
+                var totalGross = totalNet + taxAmount;
 
-                totalNet += rowNet;
-                totalTax += rowTax;
-            });
-
-            totalGross = totalNet + totalTax;
-
-            document.getElementById('summaryNet').innerText = totalNet.toFixed(2) + " PLN";
-            document.getElementById('summaryVat').innerText = totalTax.toFixed(2) + " PLN";
-            document.getElementById('summaryGross').innerText = totalGross.toFixed(2) + " PLN";
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-
-            if (existingItems && existingItems.length > 0) {
-                
-                existingItems.forEach(function (item) {
-                    addNewRow(item);
-                });
+                row.querySelector('.row-gross').value = totalGross.toFixed(2);
 
                 updateInvoiceTotal();
             }
-            else {
 
-                addNewRow();
+            function updateInvoiceTotal() {
+                var totalNet = 0;
+                var totalTax = 0;
+                var totalGross = 0;
+
+                var rows = document.querySelectorAll('#invoiceItemsTable tbody tr');
+
+                rows.forEach(row => {
+                    var quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+                    var priceNet = parseFloat(row.querySelector('.price-input').value) || 0;
+                    var taxRate = parseFloat(row.querySelector('.tax-input').value) || 0;
+
+                    var rowNet = quantity * priceNet;
+                    var rowTax = rowNet * (taxRate / 100);
+
+                    totalNet += rowNet;
+                    totalTax += rowTax;
+                });
+
+                totalGross = totalNet + totalTax;
+
+                document.getElementById('summaryNet').innerText = totalNet.toFixed(2) + " PLN";
+                document.getElementById('summaryVat').innerText = totalTax.toFixed(2) + " PLN";
+                document.getElementById('summaryGross').innerText = totalGross.toFixed(2) + " PLN";
             }
 
-            var clientSelect = document.getElementById('clientSelect');
+            document.addEventListener("DOMContentLoaded", function () {
 
-            if (clientSelect && clientSelect.value) {
-                clientChanged(clientSelect);
-            }
-        });
+                if (existingItems && existingItems.length > 0) {
+
+                    existingItems.forEach(function (item) {
+                        addNewRow(item);
+                    });
+
+                    updateInvoiceTotal();
+                }
+                else {
+
+                    addNewRow();
+                }
+
+                var clientSelect = document.getElementById('clientSelect');
+
+                if (clientSelect && clientSelect.value) {
+                    clientChanged(clientSelect);
+                }
+            });
     </script>
 }

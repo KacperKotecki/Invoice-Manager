@@ -330,6 +330,12 @@ namespace Invoice_Manager.Controllers
 
             if (invoiceInDb == null) return HttpNotFound();
 
+            if (invoiceInDb.Status == InvoiceStatus.Paid)
+            {
+                // blokada edycji opłaconej faktury
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest, "Nie można edytować opłaconej faktury.");
+            }
+
             invoiceInDb.IssueDate = invoice.IssueDate;
             invoiceInDb.SaleDate = invoice.SaleDate;
             invoiceInDb.DueDate = invoice.DueDate;
@@ -379,10 +385,9 @@ namespace Invoice_Manager.Controllers
             invoiceInDb.TotalTaxAmount = grandTotalTax;
             invoiceInDb.TotalGrossAmount = grandTotalGross;
 
+                await _context.SaveChangesAsync();
 
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction("Index");
+                return RedirectToAction("Index");
         }
 
         [HttpPost]
