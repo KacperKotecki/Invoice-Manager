@@ -30,7 +30,7 @@
     var availableClients = @Html.Raw(JsonConvert.SerializeObject(Model.Clients.Select(c => new{
         id = c.ClientId,
         address = $"{c.Street} {c.PostalCode} {c.Country}",
-        taxid = c.TaxId
+        taxId = c.TaxId
     })))              
    
 
@@ -41,7 +41,7 @@
         <div class="card-header bg-primary text-white">
             <h4 class="mb-0">
                 <i class="fa fa-file-invoice"></i> 
-                @Model.Heading  testowo dodany tekst 
+                @Model.Heading
             </h4>
         </div>
         <div class="card-body">
@@ -61,7 +61,7 @@
                                 new SelectList(Model.Clients, "ClientId", "ClientName"),
                                 "--- Wybierz klienta ---",
                                 new { @class = "form-control",
-                                    id = "ddlClients",
+                                    id = "clientSelect",
                                     onchange = "clientChanged(this)"
                                 })
                         </div>
@@ -162,7 +162,16 @@
 
                 </table>
 
-
+                <div class="row mt-3 mb-4">
+                    <div class="col-12">
+                        @Html.LabelFor(m => m.Invoice.Notes, "Uwagi")
+                        @Html.TextAreaFor(m => m.Invoice.Notes, new {
+                           @class = "form-control",
+                           rows = 3,
+                           style = "max-width: 100%; width: 65%;"
+                   })
+                    </div>
+                </div>
 
                 <div class="row justify-content-end mt-4">
                     <div class="col-md-4">
@@ -257,12 +266,13 @@
             calculateRow(selectElement);
         }
         function clientChanged(selectElement) {
-            var selectedClientId = selectElement.value;
-            var selectedClient = availableClients.find(c => c.id == clientId);
 
-            var addressDisplayElement = document.getElementById('clientAddressDisplay');
-            var taxIdDisplayElement = document.getElementById('clientTaxIdDisplay');
-           
+            var selectedClientId = selectElement.value;
+            var selectedClient = availableClients.find(c => c.id == selectedClientId);
+
+            var addressDisplayElement = document.getElementById('clientAddress');
+            var taxIdDisplayElement = document.getElementById('clientNip');
+
             if (selectedClient) {
                 addressDisplayElement.innerText = selectedClient.address;
                 taxIdDisplayElement.innerText = selectedClient.taxId;
@@ -328,6 +338,12 @@
             else {
 
                 addNewRow();
+            }
+
+            var clientSelect = document.getElementById('clientSelect');
+
+            if (clientSelect && clientSelect.value) {
+                clientChanged(clientSelect);
             }
         });
     </script>
