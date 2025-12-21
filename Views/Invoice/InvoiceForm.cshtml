@@ -46,7 +46,7 @@
         </div>
         <div class="card-body">
 
-            @using (Html.BeginForm("Create", "Invoice"))
+            @using (Html.BeginForm(action, "Invoice"))
             {
                 @Html.AntiForgeryToken()
                 @Html.HiddenFor(m => m.Invoice.InvoiceId)
