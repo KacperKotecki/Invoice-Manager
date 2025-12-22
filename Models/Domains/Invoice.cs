@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Invoice_Manager.Models.Common;
 
 namespace Invoice_Manager.Models.Domains
 {
@@ -88,6 +89,16 @@ namespace Invoice_Manager.Models.Domains
 
         [Required]
         public decimal TotalGrossAmount { get; set; }
+
+        [NotMapped]
+        public string TotalAmountInWords
+        {
+            get
+            {
+                return AmountToWordsHelper.ConvertToWords(TotalGrossAmount);
+            }
+            
+        }
 
         [Required]
         [MaxLength(5)]
