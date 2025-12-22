@@ -94,7 +94,7 @@
     @Scripts.Render("~/bundles/jqueryval")
 
     <script>
-                    var rowIndex = 0;
+                            var rowIndex = 0;
 
             function addNewRow(data = null) {
 
@@ -163,15 +163,24 @@
 
                 var addressDisplayElement = document.getElementById('clientAddress');
                 var taxIdDisplayElement = document.getElementById('clientNip');
+                var nipContainer = document.getElementById('nipContainer');
 
                 if (selectedClient) {
                     addressDisplayElement.innerText = selectedClient.address;
-                    taxIdDisplayElement.innerText = selectedClient.taxId;
-                } else {
+
+                    if (selectedClient.taxId) {
+                        taxIdDisplayElement.innerText = selectedClient.taxId;
+                        nipContainer.style.display = "inline";
+                    } else {
+                        taxIdDisplayElement.innerText = "";
+                        nipContainer.style.display = "none";
+                    }
+                }
+                else {
                     addressDisplayElement.innerText = "";
                     taxIdDisplayElement.innerText = "";
+                    nipContainer.style.display = "none";
                 }
-
             }
 
             function calculateRow(element) {

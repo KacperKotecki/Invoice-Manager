@@ -150,10 +150,13 @@
             <div class="company-name">@Model.Company_Name</div>
             <div>@Model.Company_Street</div>
             <div>@Model.Company_PostalCode @Model.Company_City</div>
-            <div>NIP: @Model.Company_TaxId</div>
+            @if (!string.IsNullOrEmpty(Model.Company_TaxId))
+            {
+                <div>NIP: @Model.Company_TaxId</div>
+            }
             <div style="margin-top: 10px;">
-                <strong>Konto: @Model.Company_BankName</strong><br />
-                @Model.Company_BankAccount
+                Konto: @Model.Company_BankName<br />
+                <strong>@Model.Company_BankAccount</strong>
             </div>
         </div>
 
