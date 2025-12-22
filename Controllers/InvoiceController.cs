@@ -103,6 +103,9 @@ namespace Invoice_Manager.Controllers
             var user = await _userManager.FindByIdAsync(userId);
             var companyId = user.CompanyId;
 
+            // Pobieramy firmę, aby uzyskać kod kraju (np. "PL")
+            var company = await _context.Companies.FindAsync(companyId);
+
             var clients = await _context.Clients
                 .Where(c => c.CompanyId == companyId && c.IsActive)
                 .ToListAsync();
@@ -111,9 +114,8 @@ namespace Invoice_Manager.Controllers
                 .Where(p => p.CompanyId == companyId)
                 .ToListAsync();
 
-            var taxRates = await _context.TaxRates
-               .Where(t => t.CompanyId == companyId)
-               .ToListAsync();
+            // ZMIANA: Pobieranie stawek VAT na podstawie kraju firmy
+            var taxRates = await GetTaxRatesForCountry(company.Country);
 
             var viewModel = new InvoiceFormViewModel
             {
@@ -266,6 +268,8 @@ namespace Invoice_Manager.Controllers
                 return HttpNotFound();
             }
 
+            var company = await _context.Companies.FindAsync(companyId);
+
             var clients = await _context.Clients
                 .Where(c => c.CompanyId == companyId && c.IsActive)
                 .ToListAsync();
@@ -274,9 +278,7 @@ namespace Invoice_Manager.Controllers
                 .Where(p => p.CompanyId == companyId)
                 .ToListAsync();
 
-            var taxRates = await _context.TaxRates
-               .Where(t => t.CompanyId == companyId)
-               .ToListAsync();
+            var taxRates = await GetTaxRatesForCountry(company.Country);
 
             var viewModel = new InvoiceFormViewModel
             {
@@ -434,18 +436,43 @@ namespace Invoice_Manager.Controllers
                 FileName = $"Faktura_{invoice.InvoiceNumber.Replace("/", "_")}.pdf"
             };
         }
+
         private async Task<ActionResult> ReloadFormWithErrors(Invoice invoice, int companyId)
         {
+           
+            var company = await _context.Companies.FindAsync(companyId);
+
             var viewModel = new InvoiceFormViewModel
             {
                 Heading = "Nowa Faktura",
                 Invoice = invoice,
                 Clients = await _context.Clients.Where(c => c.CompanyId == companyId && c.IsActive).ToListAsync(),
                 Products = await _context.Products.Where(p => p.CompanyId == companyId).ToListAsync(),
-                TaxRates = await _context.TaxRates.Where(t => t.CompanyId == companyId).ToListAsync()
+                // ZMIANA: Pobieranie stawek VAT na podstawie kraju firmy
+                TaxRates = await GetTaxRatesForCountry(company.Country)
             };
             return View("InvoiceForm", viewModel);
         }
+
+
+        private async Task<List<TaxRate>> GetTaxRatesForCountry(string countryCode)
+        {
+            
+            var rates = await _context.TaxRates
+                .Where(t => t.Country == countryCode && t.IsActive)
+                .ToListAsync();
+
+            if (!rates.Any())
+            {
+                rates = await _context.TaxRates
+                    .Where(t => t.IsActive)
+                    .OrderBy(t => t.Rate)
+                    .ToListAsync();
+            }
+
+            return rates;
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)

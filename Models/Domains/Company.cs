@@ -13,7 +13,6 @@ namespace Invoice_Manager.Models.Domains
             Clients = new HashSet<Client>();
             Invoices = new HashSet<Invoice>();
             Products = new HashSet<Product>();
-            TaxRates = new HashSet<TaxRate>();
         }
 
         [Key]
@@ -56,6 +55,5 @@ namespace Invoice_Manager.Models.Domains
         public virtual ICollection<Client> Clients { get; set; }
         public virtual ICollection<Invoice> Invoices { get; set; }
         public virtual ICollection<Product> Products { get; set; }
-        public virtual ICollection<TaxRate> TaxRates { get; set; }
     }
 }

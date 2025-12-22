@@ -46,20 +46,15 @@ namespace Invoice_Manager.Controllers
             var userId = User.Identity.GetUserId();
             var user = await UserManager.FindByIdAsync(userId);
 
-            // 1. Podstawowe zapytanie
-            // Używamy .Include(p => p.DefaultTaxRate), żeby pobrać też nazwę stawki VAT (np. "23%")
             var query = _context.Products
                 .Include(p => p.DefaultTaxRate)
                 .Where(p => p.CompanyId == user.CompanyId);
 
-            // 2. Obsługa wyszukiwania
             if (!string.IsNullOrWhiteSpace(searchQuery))
             {
                 query = query.Where(p =>
                     p.Name.Contains(searchQuery) ||
                     p.Description.Contains(searchQuery)
-                // Wyszukiwanie po cenie/liczbach w SQL bywa trudne przez .ToString(), 
-                // na razie skupmy się na tekstach dla bezpieczeństwa.
                 );
             }
 
@@ -77,9 +72,11 @@ namespace Invoice_Manager.Controllers
         {
             var userId = User.Identity.GetUserId();
             var user = await UserManager.FindByIdAsync(userId);
+            
+            // Pobieramy firmę, aby znać jej kraj
+            var company = await _context.Companies.FindAsync(user.CompanyId);
 
-            // Przygotuj listę stawek VAT do dropdowna
-            await PopulateTaxRatesDropDownList(user.CompanyId);
+            await PopulateTaxRatesDropDownList(company.Country);
 
             return View(new Product());
         }
@@ -93,17 +90,16 @@ namespace Invoice_Manager.Controllers
             var user = await UserManager.FindByIdAsync(userId);
 
             product.CompanyId = user.CompanyId;
-            // Produkt nie ma pola IsActive w naszym modelu, więc go nie ustawiamy.
 
             if (ModelState.IsValid)
             {
-                _context.Products.Add(product); // Zmieniono Clients na Products!
+                _context.Products.Add(product);
                 await _context.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
 
-            // Jeśli błąd, musimy ponownie załadować listę VAT, bo ViewBag znika po przeładowaniu
-            await PopulateTaxRatesDropDownList(user.CompanyId, product.DefaultTaxRateId);
+            var company = await _context.Companies.FindAsync(user.CompanyId);
+            await PopulateTaxRatesDropDownList(company.Country, product.DefaultTaxRateId);
             return View(product);
         }
 
@@ -120,8 +116,8 @@ namespace Invoice_Manager.Controllers
 
             if (product == null) return HttpNotFound();
 
-            // Przygotuj listę stawek VAT i zaznacz aktualną
-            await PopulateTaxRatesDropDownList(user.CompanyId, product.DefaultTaxRateId);
+            var company = await _context.Companies.FindAsync(user.CompanyId);
+            await PopulateTaxRatesDropDownList(company.Country, product.DefaultTaxRateId);
 
             return View(product);
         }
@@ -131,30 +127,26 @@ namespace Invoice_Manager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit(Product product)
         {
+            var userId = User.Identity.GetUserId();
+            var user = await UserManager.FindByIdAsync(userId);
+
             if (!ModelState.IsValid)
             {
-                // Jeśli błąd, odnów listę VAT
-                var userId = User.Identity.GetUserId();
-                var user = await UserManager.FindByIdAsync(userId);
-                await PopulateTaxRatesDropDownList(user.CompanyId, product.DefaultTaxRateId);
+                var company = await _context.Companies.FindAsync(user.CompanyId);
+                await PopulateTaxRatesDropDownList(company.Country, product.DefaultTaxRateId);
                 return View(product);
             }
 
-            // Logika zapisu
-            var userIdForSave = User.Identity.GetUserId();
-            var userForSave = await UserManager.FindByIdAsync(userIdForSave);
-
             var productInDb = await _context.Products
-                .FirstOrDefaultAsync(p => p.ProductId == product.ProductId && p.CompanyId == userForSave.CompanyId);
+                .FirstOrDefaultAsync(p => p.ProductId == product.ProductId && p.CompanyId == user.CompanyId);
 
             if (productInDb == null) return HttpNotFound();
 
-            // Ręczne mapowanie (Aktualizacja pól)
             productInDb.Name = product.Name;
             productInDb.Description = product.Description;
             productInDb.Unit = product.Unit;
             productInDb.UnitPriceNet = product.UnitPriceNet;
-            productInDb.DefaultTaxRateId = product.DefaultTaxRateId; // Zmiana stawki VAT
+            productInDb.DefaultTaxRateId = product.DefaultTaxRateId;
 
             await _context.SaveChangesAsync();
 
@@ -191,29 +183,27 @@ namespace Invoice_Manager.Controllers
 
             if (product == null) return HttpNotFound();
 
-            // HARD DELETE (Fizyczne usunięcie)
-            // Jeśli chcesz Soft Delete, musisz dodać pole IsActive do modelu Product
             _context.Products.Remove(product);
-
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Index");
         }
 
-        // --- METODY POMOCNICZE (Helpers) ---
-
-        // Ta metoda pobiera stawki VAT dla danej firmy i wrzuca je do ViewBag
-        // Dzięki temu w widoku będziemy mogli użyć: @Html.DropDownListFor(...)
-        private async Task PopulateTaxRatesDropDownList(int companyId, object selectedTaxRate = null)
+        private async Task PopulateTaxRatesDropDownList(string countryCode, object selectedTaxRate = null)
         {
             var taxRatesQuery = _context.TaxRates
-                .Where(t => t.CompanyId == companyId)
-                .OrderBy(t => t.Rate); // Sortuj np. od najmniejszej stawki
+                .Where(t => t.Country == countryCode && t.IsActive);
 
             var taxRates = await taxRatesQuery.ToListAsync();
 
-            // "TaxRateId" -> to co zapisujemy w bazie (Value)
-            // "Name" -> to co widzi użytkownik (Text) np. "VAT 23%"
+            if (!taxRates.Any())
+            {
+                taxRates = await _context.TaxRates
+                    .Where(t => t.IsActive)
+                    .OrderBy(t => t.Rate)
+                    .ToListAsync();
+            }
+
             ViewBag.TaxRates = new SelectList(taxRates, "TaxRateId", "Name", selectedTaxRate);
         }
 

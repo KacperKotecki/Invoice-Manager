@@ -1,4 +1,5 @@
 @model Invoice_Manager.Models.ViewModels.CompleteProfileViewModel
+@using Invoice_Manager.Models.Common
 @{
     ViewBag.Title = "Profil Firmy";
 }
@@ -28,10 +29,13 @@
         border-color: #444;
     }
 
-    .login-card .form-control {
+    .login-card .form-control{
         background-color: #3a3f44;
         color: #fff;
         border-color: #444;
+    }
+    .dropdown {
+        background-color: #3a3f44;
     }
 
         .login-card .form-control::placeholder {
@@ -62,113 +66,113 @@
 
                             @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
-                        <div class="row p-3">
+                            <div class="row p-3">
 
-                            <div class="col-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Pe³na nazwa firmy</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fa fa-building"></i></span>
-                                        @Html.TextBoxFor(m => m.CompanyName, new { @class = "form-control ", placeholder = "Comarch S.A." })
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Pe³na nazwa firmy</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa fa-building"></i></span>
+                                            @Html.TextBoxFor(m => m.CompanyName, new { @class = "form-control ", placeholder = "Comarch S.A." })
+                                        </div>
+                                        @Html.ValidationMessageFor(m => m.CompanyName, "", new { @class = "text-danger small" })
                                     </div>
-                                    @Html.ValidationMessageFor(m => m.CompanyName, "", new { @class = "text-danger small" })
+
+                                    <div class="mb-3">
+                                        <label class="form-label">NIP</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa fa-briefcase"></i></span>
+                                            @Html.TextBoxFor(m => m.TaxId, new { @class = "form-control ", placeholder = "526-10-04-563" })
+                                        </div>
+                                        @Html.ValidationMessageFor(m => m.TaxId, "", new { @class = "text-danger small" })
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Ulica i numer</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa fa-map-signs"></i></span>
+                                            @Html.TextBoxFor(m => m.Street, new { @class = "form-control ", placeholder = "Liœciasta 23" })
+                                        </div>
+                                        @Html.ValidationMessageFor(m => m.Street, "", new { @class = "text-danger small" })
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Miasto</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa fa-map-pin"></i></span>
+                                            @Html.TextBoxFor(m => m.City, new { @class = "form-control ", placeholder = "Warszawa" })
+                                        </div>
+                                        @Html.ValidationMessageFor(m => m.City, "", new { @class = "text-danger small" })
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Kod pocztowy</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa fa-address-book"></i></span>
+                                            @Html.TextBoxFor(m => m.PostalCode, new { @class = "form-control ", placeholder = "99-591" })
+                                        </div>
+                                        @Html.ValidationMessageFor(m => m.PostalCode, "", new { @class = "text-danger small" })
+                                    </div>
+
+
                                 </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label">NIP</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fa fa-briefcase"></i></span>
-                                        @Html.TextBoxFor(m => m.TaxId, new { @class = "form-control ", placeholder = "526-10-04-563" })
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Kraj</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa fa-globe"></i></span>
+                                            @Html.DropDownListFor(m => m.Country, CountryHelper.GetCountriesList(), "--- Wybierz kraj ---", new { @class = "form-select dropdown" })
+                                        </div>
+                                        @Html.ValidationMessageFor(m => m.Country, "", new { @class = "text-danger small" })
                                     </div>
-                                    @Html.ValidationMessageFor(m => m.TaxId, "", new { @class = "text-danger small" })
-                                </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label">Ulica i numer</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fa fa-map-signs"></i></span>
-                                        @Html.TextBoxFor(m => m.Street, new { @class = "form-control ", placeholder = "Liœciasta 23" })
+                                    <div class="mb-3">
+                                        <label class="form-label">Pe³na nazwa banku</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa fa-university"></i></span>
+                                            @Html.TextBoxFor(m => m.BankName, new { @class = "form-control ", placeholder = "mBank S.A." })
+                                        </div>
+                                        @Html.ValidationMessageFor(m => m.BankName, "", new { @class = "text-danger small" })
                                     </div>
-                                    @Html.ValidationMessageFor(m => m.Street, "", new { @class = "text-danger small" })
-                                </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label">Miasto</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fa fa-map-pin"></i></span>
-                                        @Html.TextBoxFor(m => m.City, new { @class = "form-control ", placeholder = "Warszawa" })
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Numer konta bankowego</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa fa-credit-card"></i></span>
+                                            @Html.TextBoxFor(m => m.BankAccount, new { @class = "form-control ", placeholder = "PL12 3456 7890 1234 5678 9012" })
+                                        </div>
+                                        @Html.ValidationMessageFor(m => m.BankAccount, "", new { @class = "text-danger small" })
                                     </div>
-                                    @Html.ValidationMessageFor(m => m.City, "", new { @class = "text-danger small" })
-                                </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label">Kod pocztowy</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fa fa-address-book"></i></span>
-                                        @Html.TextBoxFor(m => m.PostalCode, new { @class = "form-control ", placeholder = "99-591" })
+                                    <div class="mb-3">
+                                        <label class="form-label">Adres e-mail firmy</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control ", placeholder = "kontakt@firma.pl" })
+                                        </div>
+                                        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger small" })
                                     </div>
-                                    @Html.ValidationMessageFor(m => m.PostalCode, "", new { @class = "text-danger small" })
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Telefon</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa fa-phone"></i></span>
+                                            @Html.TextBoxFor(m => m.Phone, new { @class = "form-control ", placeholder = "+48 600 123 456" })
+                                        </div>
+                                        @Html.ValidationMessageFor(m => m.Phone, "", new { @class = "text-danger small" })
+                                    </div>
+
                                 </div>
-
-
                             </div>
 
-                            <div class="col-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Kraj</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fa fa-globe"></i></span>
-                                        @Html.TextBoxFor(m => m.Country, new { @class = "form-control ", placeholder = "Polska" })
-                                    </div>
-                                    @Html.ValidationMessageFor(m => m.Country, "", new { @class = "text-danger small" })
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Pe³na nazwa banku</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fa fa-university"></i></span>
-                                        @Html.TextBoxFor(m => m.BankName, new { @class = "form-control ", placeholder = "mBank S.A." })
-                                    </div>
-                                    @Html.ValidationMessageFor(m => m.BankName, "", new { @class = "text-danger small" })
-                                </div>
 
 
-                                <div class="mb-3">
-                                    <label class="form-label">Numer konta bankowego</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fa fa-credit-card"></i></span>
-                                        @Html.TextBoxFor(m => m.BankAccount, new { @class = "form-control ", placeholder = "PL12 3456 7890 1234 5678 9012" })
-                                    </div>
-                                    @Html.ValidationMessageFor(m => m.BankAccount, "", new { @class = "text-danger small" })
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Adres e-mail firmy</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fa fa-envelope"></i></span>
-                                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control ", placeholder = "kontakt@firma.pl" })
-                                    </div>
-                                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger small" })
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Telefon</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fa fa-phone"></i></span>
-                                        @Html.TextBoxFor(m => m.Phone, new { @class = "form-control ", placeholder = "+48 600 123 456" })
-                                    </div>
-                                    @Html.ValidationMessageFor(m => m.Phone, "", new { @class = "text-danger small" })
-                                </div>
-
-                            </div>
-                            </div>
 
 
-                            
 
-                            
 
-                        
                             <div class="d-grid gap-2 mt-4">
                                 <button type="submit" class="btn btn-primary btn-lg">
                                     Zapisz  <i class="fa fa-sign-in-alt ms-1"></i>

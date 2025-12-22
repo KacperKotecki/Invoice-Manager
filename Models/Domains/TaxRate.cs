@@ -17,20 +17,19 @@ namespace Invoice_Manager.Models.Domains
         public int TaxRateId { get; set; }
 
         [Required]
-        public int CompanyId { get; set; }
-
-        [Required]
         [MaxLength(20)]
         public string Name { get; set; }
 
         [Required]
         public decimal Rate { get; set; }
 
-        [DefaultValue(false)]
-        public bool IsDefault { get; set; }
+        [Required]
+        [MaxLength(2)]
+        public string Country { get; set; }
 
-        [ForeignKey("CompanyId")]
-        public virtual Company Company { get; set; }
+        [DefaultValue(true)]
+        public bool IsActive { get; set; }
+
         public virtual ICollection<Product> Products { get; set; }
     }
 }
