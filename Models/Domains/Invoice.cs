@@ -54,6 +54,11 @@ namespace Invoice_Manager.Models.Domains
         [Required]
         [MaxLength(20)]
         public string Company_PostalCode { get; set; }
+
+        [Required]
+        [MaxLength(50)]
+        public string Company_BankName { get; set; }
+
         [Required]
         [MaxLength(50)]
         public string Company_BankAccount { get; set; }

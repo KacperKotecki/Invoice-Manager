@@ -34,6 +34,11 @@ namespace Invoice_Manager.Models.ViewModels
         [Display(Name = "Kraj")]
         public string Country { get; set; }
 
+        [Required(ErrorMessage = "Pe³na nazwa banku jest wymagana.")]
+        [MaxLength(50)]
+        [Display(Name = "Pe³na nazwa banku")]
+        public string BankName { get; set; }
+
         [Required(ErrorMessage = "Numer konta bankowego jest wymagany.")]
         [MaxLength(50)]
         [Display(Name = "Numer konta bankowego")]

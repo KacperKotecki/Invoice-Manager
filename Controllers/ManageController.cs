@@ -346,6 +346,7 @@ namespace Invoice_Manager.Controllers
                 City = user.Company.City,
                 PostalCode = user.Company.PostalCode,
                 Country = user.Company.Country,
+                BankName = user.Company.BankName,
                 BankAccount = user.Company.BankAccount,
                 Email = user.Company.Email,
                 Phone = user.Company.Phone
@@ -380,6 +381,7 @@ namespace Invoice_Manager.Controllers
             user.Company.City = model.City;
             user.Company.PostalCode = model.PostalCode;
             user.Company.Country = model.Country;
+            user.Company.BankName = model.BankName;
             user.Company.BankAccount = model.BankAccount;
             user.Company.Email = model.Email;
             user.Company.Phone = model.Phone;

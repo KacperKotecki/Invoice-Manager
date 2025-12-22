@@ -22,9 +22,8 @@
                     <li>@Html.ActionLink("Faktury", "Index","Invoice", new {area = ""}, new { @class = "nav-link"})</li>
                     <li>@Html.ActionLink("Klienci", "Index","Client", new {area = ""}, new { @class = "nav-link"})</li>
                     <li>@Html.ActionLink("Produkty", "Index","Product", new {area = ""}, new { @class = "nav-link"})</li>
-                    <li>@Html.ActionLink("Strona główna", "Index", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("O mnie", "About", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("Kontakt", "Contact", "Home", new { area = "" }, new { @class = "nav-link" })</li>
+                    <li>@Html.ActionLink("Edytuj profil firmy", "CompanyProfile", "Manage", new {area = ""}, new { @class = "nav-link"})</li>
+                   
                 </ul>
                  @Html.Partial("_LoginPartial")
             </div>

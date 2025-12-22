@@ -39,6 +39,9 @@ namespace Invoice_Manager.Models.Domains
         public string Country { get; set; }
 
         [MaxLength(50)]
+        public string BankName { get; set; }
+
+        [MaxLength(50)]
         public string BankAccount { get; set; }
 
         [MaxLength(100)]

@@ -47,6 +47,7 @@ namespace Invoice_Manager.Filters
                                          !string.IsNullOrWhiteSpace(company.City) &&
                                          !string.IsNullOrWhiteSpace(company.PostalCode) &&
                                          !string.IsNullOrWhiteSpace(company.Country) &&
+                                         !string.IsNullOrWhiteSpace(company.BankName) &&
                                          !string.IsNullOrWhiteSpace(company.BankAccount);
 
             if (!isProfileDataComplete)

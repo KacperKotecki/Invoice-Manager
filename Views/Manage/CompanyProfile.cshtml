@@ -3,99 +3,194 @@
     ViewBag.Title = "Profil Firmy";
 }
 
-<h2>@ViewBag.Title.</h2>
+<style>
 
-@using (Html.BeginForm("CompanyProfile", "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
-{
-    @Html.AntiForgeryToken()
-    <h4>Uzupe³nij lub zaktualizuj dane swojej firmy.</h4>
-    <hr />
-    
-    if (!string.IsNullOrEmpty(ViewBag.StatusMessage))
-    {
-        <p class="text-success">@ViewBag.StatusMessage</p>
+    .login-card .form-label {
+        display: block !important;
+        margin-bottom: 8px !important;
+        color: #e0e0e0 !important;
+        font-weight: 600;
+        position: relative;
+        top: auto;
+        left: auto;
     }
-    
-    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
-    <div class="form-group mb-2 mt-2">
-        @Html.LabelFor(m => m.CompanyName, new { @class = "col-md-2 control-label" })
-        <div class="col-md-10">
-            @Html.EditorFor(m => m.CompanyName, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(m => m.CompanyName, "", new { @class = "text-danger" })
+
+    .login-card .card-footer {
+        background-color: #2c3034 !important;
+        color: #b0b0b0 !important;
+        border-top: 1px solid #444;
+    }
+
+    .login-card .input-group-text {
+        background-color: #3a3f44;
+        color: #fff;
+        border-color: #444;
+    }
+
+    .login-card .form-control {
+        background-color: #3a3f44;
+        color: #fff;
+        border-color: #444;
+    }
+
+        .login-card .form-control::placeholder {
+            color: #888;
+        }
+</style>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-9">
+
+            <div class="card shadow-lg border-0 rounded-lg login-card" style="background-color: #2c3034; color: #fff;">
+
+                <div class="card-header bg-primary text-white text-center p-4">
+                    <h3 class="font-weight-light my-2">
+                        <i class="fa fa-user-circle me-2"></i>
+                        Invoice Manager
+                    </h3>
+                    <h4>@ViewBag.Title</h4>
+                    <small>Uzupe³nij lub zaktualizuj dane swojej firmy.</small>
+                </div>
+
+                <div class="card-body">
+                    <section id="loginForm">
+                        @using (Html.BeginForm("CompanyProfile", "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+                        {
+                            @Html.AntiForgeryToken()
+
+                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                        <div class="row p-3">
+
+                            <div class="col-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Pe³na nazwa firmy</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa fa-building"></i></span>
+                                        @Html.TextBoxFor(m => m.CompanyName, new { @class = "form-control ", placeholder = "Comarch S.A." })
+                                    </div>
+                                    @Html.ValidationMessageFor(m => m.CompanyName, "", new { @class = "text-danger small" })
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">NIP</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa fa-briefcase"></i></span>
+                                        @Html.TextBoxFor(m => m.TaxId, new { @class = "form-control ", placeholder = "526-10-04-563" })
+                                    </div>
+                                    @Html.ValidationMessageFor(m => m.TaxId, "", new { @class = "text-danger small" })
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Ulica i numer</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa fa-map-signs"></i></span>
+                                        @Html.TextBoxFor(m => m.Street, new { @class = "form-control ", placeholder = "Liœciasta 23" })
+                                    </div>
+                                    @Html.ValidationMessageFor(m => m.Street, "", new { @class = "text-danger small" })
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Miasto</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa fa-map-pin"></i></span>
+                                        @Html.TextBoxFor(m => m.City, new { @class = "form-control ", placeholder = "Warszawa" })
+                                    </div>
+                                    @Html.ValidationMessageFor(m => m.City, "", new { @class = "text-danger small" })
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Kod pocztowy</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa fa-address-book"></i></span>
+                                        @Html.TextBoxFor(m => m.PostalCode, new { @class = "form-control ", placeholder = "99-591" })
+                                    </div>
+                                    @Html.ValidationMessageFor(m => m.PostalCode, "", new { @class = "text-danger small" })
+                                </div>
+
+
+                            </div>
+
+                            <div class="col-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Kraj</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa fa-globe"></i></span>
+                                        @Html.TextBoxFor(m => m.Country, new { @class = "form-control ", placeholder = "Polska" })
+                                    </div>
+                                    @Html.ValidationMessageFor(m => m.Country, "", new { @class = "text-danger small" })
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Pe³na nazwa banku</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa fa-university"></i></span>
+                                        @Html.TextBoxFor(m => m.BankName, new { @class = "form-control ", placeholder = "mBank S.A." })
+                                    </div>
+                                    @Html.ValidationMessageFor(m => m.BankName, "", new { @class = "text-danger small" })
+                                </div>
+
+
+                                <div class="mb-3">
+                                    <label class="form-label">Numer konta bankowego</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa fa-credit-card"></i></span>
+                                        @Html.TextBoxFor(m => m.BankAccount, new { @class = "form-control ", placeholder = "PL12 3456 7890 1234 5678 9012" })
+                                    </div>
+                                    @Html.ValidationMessageFor(m => m.BankAccount, "", new { @class = "text-danger small" })
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Adres e-mail firmy</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control ", placeholder = "kontakt@firma.pl" })
+                                    </div>
+                                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger small" })
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Telefon</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa fa-phone"></i></span>
+                                        @Html.TextBoxFor(m => m.Phone, new { @class = "form-control ", placeholder = "+48 600 123 456" })
+                                    </div>
+                                    @Html.ValidationMessageFor(m => m.Phone, "", new { @class = "text-danger small" })
+                                </div>
+
+                            </div>
+                            </div>
+
+
+                            
+
+                            
+
+                        
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    Zapisz  <i class="fa fa-sign-in-alt ms-1"></i>
+                                </button>
+                            </div>
+                        }
+                    </section>
+                </div>
+
+
+
+            </div>
         </div>
     </div>
+</div>
 
-    <div class="form-group mb-2 mt-2">
-        @Html.LabelFor(m => m.TaxId, new { @class = "col-md-2 control-label" })
-        <div class="col-md-10">
-            @Html.EditorFor(m => m.TaxId, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(m => m.TaxId, "", new { @class = "text-danger" })
-        </div>
-    </div>
 
-    <div class="form-group mb-2 mt-2">
-        @Html.LabelFor(m => m.Street, new { @class = "col-md-2 control-label" })
-        <div class="col-md-10">
-            @Html.EditorFor(m => m.Street, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(m => m.Street, "", new { @class = "text-danger" })
-        </div>
-    </div>
 
-    <div class="form-group mb-2 mt-2">
-        @Html.LabelFor(m => m.City, new { @class = "col-md-2 control-label" })
-        <div class="col-md-10">
-            @Html.EditorFor(m => m.City, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(m => m.City, "", new { @class = "text-danger" })
-        </div>
-    </div>
 
-    <div class="form-group mb-2 mt-2">
-        @Html.LabelFor(m => m.PostalCode, new { @class = "col-md-2 control-label" })
-        <div class="col-md-10">
-            @Html.EditorFor(m => m.PostalCode, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(m => m.PostalCode, "", new { @class = "text-danger" })
-        </div>
-    </div>
 
-    <div class="form-group mb-2 mt-2">
-        @Html.LabelFor(m => m.Country, new { @class = "col-md-2 control-label" })
-        <div class="col-md-10">
-            @Html.EditorFor(m => m.Country, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(m => m.Country, "", new { @class = "text-danger" })
-        </div>
-    </div>
 
-    <div class="form-group mb-2 mt-2">
-        @Html.LabelFor(m => m.BankAccount, new { @class = "col-md-2 control-label" })
-        <div class="col-md-10">
-            @Html.EditorFor(m => m.BankAccount, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(m => m.BankAccount, "", new { @class = "text-danger" })
-        </div>
-    </div>
 
-    <div class="form-group mb-2 mt-2">
-        @Html.LabelFor(m => m.Email, new { @class = "col-md-2 control-label" })
-        <div class="col-md-10">
-            @Html.EditorFor(m => m.Email, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
-        </div>
-    </div>
-
-    <div class="form-group mb-2 mt-2">
-        @Html.LabelFor(m => m.Phone, new { @class = "col-md-2 control-label" })
-        <div class="col-md-10">
-            @Html.EditorFor(m => m.Phone, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(m => m.Phone, "", new { @class = "text-danger" })
-        </div>
-    </div>
-
-    <div class="form-group mb-2 mt-2">
-        <div class="col-md-offset-2 col-md-10">
-            <input type="submit" value="Zapisz" class="btn btn-primary" />
-        </div>
-    </div>
-}
 
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")

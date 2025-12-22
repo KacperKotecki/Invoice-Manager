@@ -199,7 +199,9 @@ namespace Invoice_Manager.Controllers
             invoice.Company_Street = company.Street;
             invoice.Company_City = company.City;
             invoice.Company_PostalCode = company.PostalCode;
+            invoice.Company_BankName = company.BankName;
             invoice.Company_BankAccount = company.BankAccount;
+            
 
 
             var client = await _context.Clients.FindAsync(invoice.ClientId);
