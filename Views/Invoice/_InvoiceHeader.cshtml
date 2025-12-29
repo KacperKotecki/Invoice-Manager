@@ -47,6 +47,12 @@
                 @Html.LabelFor(m => m.Invoice.PaymentMethod, "Metoda płatności")
                 @Html.EditorFor(m => m.Invoice.PaymentMethod, new { htmlAttributes = new { @class = "form-control", Value = "Przelew" } })
             </div>
+
+            <div class="col-6">
+                @Html.LabelFor(m => m.Invoice.Currency, "Metoda płatności")
+                @Html.EditorFor(m => m.Invoice.Currency, new { htmlAttributes = new { @class = "form-control", Value = "PLN" } })
+            </div>
+
         </div>
     </div>
 </div>

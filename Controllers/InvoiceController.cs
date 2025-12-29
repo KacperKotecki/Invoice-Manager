@@ -1,17 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Mvc;
-using Invoice_Manager.Filters;
+﻿using Invoice_Manager.Filters;
 using Invoice_Manager.Models;
 using Invoice_Manager.Models.Domains;
 using Invoice_Manager.Models.ViewModels;
+using Invoice_Manager.Repositories;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Rotativa;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.Data.Entity;
+using System.Linq;
+using System.Net.NetworkInformation;
+using System.Threading.Tasks;
+using System.Web;
+using System.Web.Mvc;
+using System.Web.Services.Protocols;
 
 namespace Invoice_Manager.Controllers
 {
@@ -21,415 +25,135 @@ namespace Invoice_Manager.Controllers
     {
         private ApplicationDbContext _context;
         private ApplicationUserManager _userManager;
+        private InvoiceRepository _invoiceRepository;
+        private ClientRepository _clientRepository;
+        private CompanyRepository _companyRepository;
+        private ProductRepository _productRepository;
+        private TaxRateRepository _taxRateRepository;
 
         public InvoiceController()
         {
             _context = new ApplicationDbContext();
             _userManager = System.Web.HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            _invoiceRepository = new InvoiceRepository(_context);
+            _clientRepository = new ClientRepository(_context);
+            _companyRepository = new CompanyRepository(_context);
+            _productRepository = new ProductRepository(_context);
+            _taxRateRepository = new TaxRateRepository(_context);
+
         }
 
 
         public async Task<ActionResult> Index(string searchQuery = null, InvoiceStatus? status = null)
         {
-            var userId = User.Identity.GetUserId();
-            var user = await _userManager.FindByIdAsync(userId);
-            var companyId = user.CompanyId;
-
-
-            var thirtyDaysAgo = DateTime.Now.AddDays(-30);
-            var amountToCollect = await _context.Invoices
-                .Where(i => i.CompanyId == companyId && (i.Status == InvoiceStatus.Sent || i.Status == InvoiceStatus.Overdue))
-                .SumAsync(i => (decimal?)i.TotalGrossAmount) ?? 0;
-
-            var amountCollectedThisMonth = await _context.Payments
-                .Where(p => p.Invoice.CompanyId == companyId && p.PaymentDate >= thirtyDaysAgo)
-                .SumAsync(p => (decimal?)p.Amount) ?? 0;
-
-            var overdueCount = await _context.Invoices
-                .CountAsync(i => i.CompanyId == companyId && i.Status == InvoiceStatus.Overdue);
-
-            var statsViewModel = new DashboardStatsViewModel
-            {
-                AmountToCollect = amountToCollect,
-                AmountCollectedThisMonth = amountCollectedThisMonth,
-                OverdueCount = overdueCount
-            };
-
-            var query = _context.Invoices
-                .Include(i => i.Payments) 
-                .Where(i => i.CompanyId == companyId);
-
-
-            if (!string.IsNullOrWhiteSpace(searchQuery))
-            {
-                query = query.Where(i => i.InvoiceNumber.Contains(searchQuery) || i.Client_Name.Contains(searchQuery));
-            }
-
-            if (status.HasValue)
-            {
-                query = query.Where(i => i.Status == status.Value);
-            }
-
-            var invoices = await query
-                .OrderByDescending(i => i.IssueDate)
-                .Take(30)
-                .Select(i => new InvoiceCardViewModel
-                {
-                    InvoiceId = i.InvoiceId,
-                    InvoiceNumber = i.InvoiceNumber,
-                    ClientName = i.Client_Name,
-                    TotalGrossAmount = i.TotalGrossAmount,
-                    Currency = i.Currency,
-                    Status = i.Status,
-                    DueDate = i.DueDate,
-                    Payments = i.Payments
-                })
-                .ToListAsync();
-
-
-            var viewModel = new DashboardViewModel
-            {
-                Invoices = invoices,
-                Stats = statsViewModel,
-                SearchQuery = searchQuery,
-                ActiveFilter = status
-            };
-
+            var companyId = await GetCurrentCompanyIdAsync();
+            var invoices = _invoiceRepository.GetInvoicesWithFilters(companyId, searchQuery, status);
+            var viewModel = await PrepareDashboardViewModel(invoices, companyId, searchQuery, status);
+            
             return View(viewModel);
         }
+        [HttpGet]
         public async Task<ActionResult> Create()
         {
-            var userId = User.Identity.GetUserId();
-            var user = await _userManager.FindByIdAsync(userId);
-            var companyId = user.CompanyId;
-
-            // Pobieramy firmę, aby uzyskać kod kraju (np. "PL")
-            var company = await _context.Companies.FindAsync(companyId);
-
-            var clients = await _context.Clients
-                .Where(c => c.CompanyId == companyId && c.IsActive)
-                .ToListAsync();
-
-            var products = await _context.Products
-                .Where(p => p.CompanyId == companyId)
-                .ToListAsync();
-
-            // ZMIANA: Pobieranie stawek VAT na podstawie kraju firmy
-            var taxRates = await GetTaxRatesForCountry(company.Country);
-
-            var viewModel = new InvoiceFormViewModel
-            {
-                Heading = "Nowa Faktura",
-                Invoice = new Invoice
-                {
-                    IssueDate = DateTime.Now,
-                    SaleDate = DateTime.Now,
-                    DueDate = DateTime.Now.AddDays(14), // Domyślny termin płatności
-                    Currency = "PLN",
-                    PaymentMethod = "Przelew"
-                },
-                Clients = clients,
-                Products = products,
-                TaxRates = taxRates
-            };
-
-            return View("InvoiceForm", viewModel);
+            var viewModel = await PrepareInvoiceFormViewModel(); 
+            return View("Manage", viewModel);
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create([Bind(Prefix = "Invoice")] Invoice invoice)
         {
-            var userId = User.Identity.GetUserId();
-            var user = await _userManager.FindByIdAsync(userId);
+            var companyId = await GetCurrentCompanyIdAsync();
+            var company = await _companyRepository.GetCompanyByIdAsync(companyId);
+            var client = await _clientRepository.GetClientByIdAsync(invoice.ClientId);
 
-            var keys = ModelState.Keys.ToList();
+            _invoiceRepository.UpdateInvoiceSnapshots(invoice, company, client);
 
-            foreach (var key in keys)
-            {
-                if (key.EndsWith("InvoiceNumber") ||
-                    key.EndsWith("Currency") ||
-                    key.EndsWith("Status") ||
-                    key.Contains("Company_") ||
-                    key.Contains("Client_") ||
-                    key.EndsWith("Company") ||
-                    key.EndsWith("Client"))
-                {
-                    ModelState.Remove(key);
-                }
+            await _invoiceRepository.CalculateInvoiceTotals(invoice);
 
-
-                if (key.Contains("InvoiceItems") && key.EndsWith(".Name"))
-                {
-                    ModelState.Remove(key);
-                }
-            }
-
-
-            if (invoice.InvoiceItems == null || !invoice.InvoiceItems.Any())
-            {
-                ModelState.AddModelError("", "Faktura musi mieć co najmniej jedną pozycję.");
-            }
-
-            if (!ModelState.IsValid)
-            {
-
-                return await ReloadFormWithErrors(invoice, user.CompanyId);
-            }
-
-
-
-            invoice.CompanyId = user.CompanyId;
             invoice.Status = InvoiceStatus.Draft;
 
-
-            if (string.IsNullOrEmpty(invoice.Currency))
-            {
-                invoice.Currency = "PLN";
-            }
-
-
-            var count = await _context.Invoices.CountAsync(i => i.CompanyId == user.CompanyId) + 1;
+            var count = await _invoiceRepository.GetNextInvoiceNumberAsync(companyId);
             invoice.InvoiceNumber = $"FV/{DateTime.Now.Year}/{DateTime.Now.Month:D2}/{count}";
 
-
-            var company = await _context.Companies.FindAsync(user.CompanyId);
-            if (company == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest, "Brak profilu firmy");
-
-            invoice.Company_Name = company.CompanyName;
-            invoice.Company_TaxId = company.TaxId;
-            invoice.Company_Street = company.Street;
-            invoice.Company_City = company.City;
-            invoice.Company_PostalCode = company.PostalCode;
-            invoice.Company_BankName = company.BankName;
-            invoice.Company_BankAccount = company.BankAccount;
-            
-
-
-            var client = await _context.Clients.FindAsync(invoice.ClientId);
-            if (client == null || client.CompanyId != user.CompanyId)
+            try
             {
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
+
+                _invoiceRepository.Add(invoice);
+
+                await _context.SaveChangesAsync();
+                return RedirectToAction("Index");
             }
-
-            invoice.Client_Name = client.ClientName;
-            invoice.Client_TaxId = client.TaxId;
-            invoice.Client_Street = client.Street;
-            invoice.Client_City = client.City;
-            invoice.Client_PostalCode = client.PostalCode;
-
-
-            decimal grandTotalNet = 0;
-            decimal grandTotalTax = 0;
-            decimal grandTotalGross = 0;
-
-            foreach (var item in invoice.InvoiceItems)
+            catch (Exception ex)
             {
-                item.TotalNetAmount = item.Quantity * item.UnitPriceNet;
-                item.TotalTaxAmount = item.TotalNetAmount * (item.TaxRateValue / 100m);
-                item.TotalGrossAmount = item.TotalNetAmount + item.TotalTaxAmount;
-
-                grandTotalNet += item.TotalNetAmount;
-                grandTotalTax += item.TotalTaxAmount;
-                grandTotalGross += item.TotalGrossAmount;
-
-
-                if (string.IsNullOrEmpty(item.Name) && item.ProductId.HasValue)
-                {
-                    var prod = await _context.Products.FindAsync(item.ProductId);
-                    if (prod != null) item.Name = prod.Name;
-                }
+                ModelState.AddModelError("", "Wystąpił błąd podczas zapisywania faktury. Spróbuj ponownie." + ex);
+                var vm = await PrepareInvoiceFormViewModel(invoice);
+                return View("Manage", vm);
             }
-
-            invoice.TotalNetAmount = grandTotalNet;
-            invoice.TotalTaxAmount = grandTotalTax;
-            invoice.TotalGrossAmount = grandTotalGross;
-
-            _context.Invoices.Add(invoice);
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction("Index");
         }
-
-        public async Task<ActionResult> Edit(int id)
+        [HttpGet]
+        public async Task<ActionResult> Edit(int invoiceId)
         {
-            var userId = User.Identity.GetUserId();
-            var user = await _userManager.FindByIdAsync(userId);
-            var companyId = user.CompanyId;
+            var invoice = await _invoiceRepository.GetInvoiceByIdAsync(invoiceId);
+            var companyId = await GetCurrentCompanyIdAsync();
 
+            if (invoice == null || invoice.CompanyId != companyId) return HttpNotFound();
+            if (invoice.Status == InvoiceStatus.Paid) return RedirectToAction("Index");
 
-            var invoice = await _context.Invoices
-               .Include(i => i.InvoiceItems)
-               .FirstOrDefaultAsync(i => i.InvoiceId == id && i.CompanyId == companyId);
-
-
-            if (invoice == null)
-            {
-                return HttpNotFound();
-            }
-
-            var company = await _context.Companies.FindAsync(companyId);
-
-            var clients = await _context.Clients
-                .Where(c => c.CompanyId == companyId && c.IsActive)
-                .ToListAsync();
-
-            var products = await _context.Products
-                .Where(p => p.CompanyId == companyId)
-                .ToListAsync();
-
-            var taxRates = await GetTaxRatesForCountry(company.Country);
-
-            var viewModel = new InvoiceFormViewModel
-            {
-                Heading = $"Edycja faktury {invoice.InvoiceNumber}",
-
-                Invoice = invoice,
-
-                Clients = clients,
-                Products = products,
-                TaxRates = taxRates
-            };
-
-            return View("InvoiceForm", viewModel);
+            var viewModel = await PrepareInvoiceFormViewModel(invoice);
+            return View("Manage", viewModel);
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit([Bind(Prefix = "Invoice")] Invoice invoice)
         {
-            var userId = User.Identity.GetUserId();
-            var user = await _userManager.FindByIdAsync(userId);
+            var companyId = await GetCurrentCompanyIdAsync();
+            var company = await _companyRepository.GetCompanyByIdAsync(companyId);
+            var client = await _clientRepository.GetClientByIdAsync(invoice.ClientId);
+
+            _invoiceRepository.UpdateInvoiceSnapshots(invoice, company, client);
+
+            await _invoiceRepository.CalculateInvoiceTotals(invoice);
 
 
-            var keys = ModelState.Keys.Where(k =>
-                k.Contains("Company_") ||
-                k.Contains("Client_") ||
-                k.Contains("InvoiceNumber") ||
-                k.Contains("Currency") ||
-                k.Contains("Status")).ToList();
-
-            foreach (var key in keys) ModelState.Remove(key);
-
-
-            foreach (var key in ModelState.Keys.Where(k => k.Contains("InvoiceItems") && k.EndsWith(".Name")).ToList())
+            try
             {
-                ModelState.Remove(key);
-            }
 
-
-            if (invoice.InvoiceItems == null || !invoice.InvoiceItems.Any())
-            {
-                ModelState.AddModelError("", "Faktura musi mieć co najmniej jedną pozycję.");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return await ReloadFormWithErrors(invoice, user.CompanyId);
-            }
-
-            var invoiceInDb = await _context.Invoices
-                .Include(i => i.InvoiceItems)
-                .FirstOrDefaultAsync(i => i.InvoiceId == invoice.InvoiceId && i.CompanyId == user.CompanyId);
-
-            if (invoiceInDb == null) return HttpNotFound();
-
-            if (invoiceInDb.Status == InvoiceStatus.Paid)
-            {
-                // blokada edycji opłaconej faktury
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest, "Nie można edytować opłaconej faktury.");
-            }
-
-            invoiceInDb.IssueDate = invoice.IssueDate;
-            invoiceInDb.SaleDate = invoice.SaleDate;
-            invoiceInDb.DueDate = invoice.DueDate;
-            invoiceInDb.PaymentMethod = invoice.PaymentMethod;
-            invoiceInDb.Notes = invoice.Notes;
-
-            var client = await _context.Clients.FindAsync(invoice.ClientId);
-            if (client != null && client.CompanyId == user.CompanyId)
-            {
-                invoiceInDb.ClientId = invoice.ClientId;
-                invoiceInDb.Client_Name = client.ClientName;
-                invoiceInDb.Client_TaxId = client.TaxId;
-                invoiceInDb.Client_Street = client.Street;
-                invoiceInDb.Client_City = client.City;
-                invoiceInDb.Client_PostalCode = client.PostalCode;
-            }
-
-            _context.InvoiceItems.RemoveRange(invoiceInDb.InvoiceItems);
-
-
-            invoiceInDb.InvoiceItems = invoice.InvoiceItems;
-
-            decimal grandTotalNet = 0;
-            decimal grandTotalTax = 0;
-            decimal grandTotalGross = 0;
-
-            foreach (var item in invoiceInDb.InvoiceItems)
-            {
-                item.TotalNetAmount = item.Quantity * item.UnitPriceNet;
-                item.TotalTaxAmount = item.TotalNetAmount * (item.TaxRateValue / 100m);
-                item.TotalGrossAmount = item.TotalNetAmount + item.TotalTaxAmount;
-
-                grandTotalNet += item.TotalNetAmount;
-                grandTotalTax += item.TotalTaxAmount;
-                grandTotalGross += item.TotalGrossAmount;
-
-
-                if (string.IsNullOrEmpty(item.Name) && item.ProductId.HasValue)
-                {
-                    var prod = await _context.Products.FindAsync(item.ProductId);
-                    if (prod != null) item.Name = prod.Name;
-                }
-            }
-
-
-            invoiceInDb.TotalNetAmount = grandTotalNet;
-            invoiceInDb.TotalTaxAmount = grandTotalTax;
-            invoiceInDb.TotalGrossAmount = grandTotalGross;
-
+                await _invoiceRepository.UpdateInvoiceAsync(invoice, company, client);
                 await _context.SaveChangesAsync();
 
                 return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Błąd edycji: " + ex.Message);
+                return View("Manage", await PrepareInvoiceFormViewModel(invoice));
+            }
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Delete(int id)
+        public async Task<ActionResult> Delete(int invoiceId)
         {
-            var userId = User.Identity.GetUserId();
-            var user = await _userManager.FindByIdAsync(userId);
 
-
-            var invoice = await _context.Invoices
-                .FirstOrDefaultAsync(i => i.InvoiceId == id && i.CompanyId == user.CompanyId);
+            var invoice = await _invoiceRepository.GetInvoiceByIdAsync(invoiceId);
 
             if (invoice == null)
-            {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
 
-            }
             invoice.Status = InvoiceStatus.Cancelled;
-
-
-            _context.Invoices.Remove(invoice);
 
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Index");
         }
 
-        public async Task<ActionResult> DownloadPdf(int id)
+        public async Task<ActionResult> DownloadPdf(int invoiceId)
         {
-            var userId = User.Identity.GetUserId();
-            var user = await _userManager.FindByIdAsync(userId);
+            var invoice = await _invoiceRepository.GetInvoiceByIdAsync(invoiceId);
 
-            var invoice = await _context.Invoices
-                .Include(i => i.InvoiceItems)
-                .FirstOrDefaultAsync(i => i.InvoiceId == id && i.CompanyId == user.CompanyId);
-
-            if (invoice == null) return HttpNotFound();
+            if (invoice == null) 
+                return HttpNotFound();
 
             return new ViewAsPdf("InvoicePdf", invoice)
             {
@@ -437,42 +161,90 @@ namespace Invoice_Manager.Controllers
             };
         }
 
-        private async Task<ActionResult> ReloadFormWithErrors(Invoice invoice, int companyId)
-        {
-           
-            var company = await _context.Companies.FindAsync(companyId);
 
-            var viewModel = new InvoiceFormViewModel
+        private async Task<int> GetCurrentCompanyIdAsync()
+        {
+            var userId = User.Identity.GetUserId();
+            var user = await _userManager.FindByIdAsync(userId);
+            return user.CompanyId;
+        }
+        private async Task<DashboardViewModel> PrepareDashboardViewModel(List<Invoice> invoices, int companyId, string searchQuery, InvoiceStatus? status)
+        {
+
+            var stats = new DashboardStatsViewModel
             {
-                Heading = "Nowa Faktura",
-                Invoice = invoice,
-                Clients = await _context.Clients.Where(c => c.CompanyId == companyId && c.IsActive).ToListAsync(),
-                Products = await _context.Products.Where(p => p.CompanyId == companyId).ToListAsync(),
-                // ZMIANA: Pobieranie stawek VAT na podstawie kraju firmy
-                TaxRates = await GetTaxRatesForCountry(company.Country)
+                AmountToCollect = await _invoiceRepository.AmountToCollect(companyId),
+                AmountCollectedThisMonth = await _invoiceRepository.AmountCollectedThisMonth(companyId),
+                OverdueCount = await _invoiceRepository.OverdueInvoicesCount(companyId)
             };
-            return View("InvoiceForm", viewModel);
-        }
+
+            var temp = PrepareInvoiceCardViewModel(invoices);
 
 
-        private async Task<List<TaxRate>> GetTaxRatesForCountry(string countryCode)
-        {
-            
-            var rates = await _context.TaxRates
-                .Where(t => t.Country == countryCode && t.IsActive)
-                .ToListAsync();
-
-            if (!rates.Any())
+            return new DashboardViewModel
             {
-                rates = await _context.TaxRates
-                    .Where(t => t.IsActive)
-                    .OrderBy(t => t.Rate)
-                    .ToListAsync();
-            }
+                Invoices = PrepareInvoiceCardViewModel(invoices),
+                Stats = stats,
+                SearchQuery = searchQuery,
+                ActiveFilter = status
+            };
 
-            return rates;
         }
 
+
+        private List<InvoiceCardViewModel> PrepareInvoiceCardViewModel(List<Invoice> invoices)
+        {
+            var ListinvoiceCardViewModels = new List<InvoiceCardViewModel>();
+
+            foreach (var invoice in invoices)
+            {
+                var invoiceCardViewModel = new InvoiceCardViewModel
+                {
+                    InvoiceId = invoice.InvoiceId,
+                    InvoiceNumber = invoice.InvoiceNumber,
+                    ClientName = invoice.Client_Name,
+                    TotalGrossAmount = invoice.TotalGrossAmount,
+                    Currency = invoice.Currency,
+                    Status = invoice.Status,
+                    DueDate = invoice.DueDate,
+                    Payments = invoice.Payments
+                };
+                ListinvoiceCardViewModels.Add(invoiceCardViewModel);
+            }
+            return ListinvoiceCardViewModels;
+
+        }
+
+        private async Task<InvoiceFormViewModel> PrepareInvoiceFormViewModel(Invoice invoice = null)
+        {
+
+            var heading = invoice == null ? "Nowa Faktura" : $"Edycja faktury {invoice.InvoiceNumber}";
+
+            var invoiceObj = invoice ?? new Invoice
+            {
+                IssueDate = DateTime.Now,
+                SaleDate = DateTime.Now,
+                DueDate = DateTime.Now.AddDays(14),
+                Currency = "PLN",
+                PaymentMethod = "Przelew"
+            };
+
+            var companyId = await GetCurrentCompanyIdAsync();
+
+            var company = await _companyRepository.GetCompanyByIdAsync(companyId);
+            var clients = await _clientRepository.GetActiveClientsAsync(companyId);
+            var products = await _productRepository.GetProductsForCompanyAsync(companyId);
+            var taxRates = await _taxRateRepository.GetTaxRatesByCountryAsync(company.Country);
+
+            return new InvoiceFormViewModel
+            {
+                Heading = heading,
+                Invoice = invoiceObj,
+                Clients = clients,
+                Products = products,
+                TaxRates = taxRates
+            };
+        }
         protected override void Dispose(bool disposing)
         {
             if (disposing)

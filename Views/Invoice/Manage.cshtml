@@ -3,8 +3,8 @@
 @using Invoice_Manager.Models.Domains
 @{
     ViewBag.Title = Model.Heading;
-    var action = (Model.Invoice.InvoiceId) == 0 ? "Create" : "Edit";
     var isPaid = Model.Invoice.Status == InvoiceStatus.Paid;
+    var actionName = Model.Invoice.InvoiceId == 0 ? "Create" : "Edit";
 }
 
 
@@ -48,11 +48,11 @@
         </div>
         <div class="card-body">
 
-            @using (Html.BeginForm(action, "Invoice"))
+            @using (Html.BeginForm(actionName, "Invoice", FormMethod.Post))
             {
                 @Html.AntiForgeryToken()
                 @Html.HiddenFor(m => m.Invoice.InvoiceId)
-
+                
                 @Html.Partial("_InvoiceHeader");
 
                 <hr />
@@ -89,6 +89,21 @@
             }
         </div>
     </div>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger">
+            <h4><i class="fa fa-exclamation-triangle"></i> Błędy walidacji (Debug):</h4>
+            <ul>
+                @foreach (var key in ViewData.ModelState.Keys)
+                {
+                    foreach (var error in ViewData.ModelState[key].Errors)
+                    {
+                        <li><strong>@key</strong>: @error.ErrorMessage</li>
+                    }
+                }
+            </ul>
+        </div>
+    }
 </div>
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")
