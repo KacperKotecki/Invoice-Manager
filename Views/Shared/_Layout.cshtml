@@ -19,13 +19,13 @@
             </button>
             <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between bg-black">
                 <ul class="navbar-nav flex-grow-1">
-                    <li>@Html.ActionLink("Faktury", "Index","Invoice", new {area = ""}, new { @class = "nav-link"})</li>
-                    <li>@Html.ActionLink("Klienci", "Index","Client", new {area = ""}, new { @class = "nav-link"})</li>
-                    <li>@Html.ActionLink("Produkty", "Index","Product", new {area = ""}, new { @class = "nav-link"})</li>
-                    <li>@Html.ActionLink("Edytuj profil firmy", "CompanyProfile", "Manage", new {area = ""}, new { @class = "nav-link"})</li>
-                   
+                    <li>@Html.ActionLink("Faktury", "Index", "Invoice", new { area = "" }, new { @class = "nav-link" })</li>
+                    <li>@Html.ActionLink("Klienci", "Index", "Client", new { area = "" }, new { @class = "nav-link" })</li>
+                    <li>@Html.ActionLink("Produkty", "Index", "Product", new { area = "" }, new { @class = "nav-link" })</li>
+                    <li>@Html.ActionLink("Edytuj profil firmy", "CompanyProfile", "Manage", new { area = "" }, new { @class = "nav-link" })</li>
+
                 </ul>
-                 @Html.Partial("_LoginPartial")
+                @Html.Partial("_LoginPartial")
             </div>
         </div>
     </nav>
