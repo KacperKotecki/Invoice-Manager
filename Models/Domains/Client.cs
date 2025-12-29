@@ -19,26 +19,26 @@ namespace Invoice_Manager.Models.Domains
         [Required]
         public int CompanyId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Nazwa Klienta jest wymagana")]
         [MaxLength(255)]
         public string ClientName { get; set; }
 
         [MaxLength(30)]
         public string TaxId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Ulica jest wymagana")]
         [MaxLength(255)]
         public string Street { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Miasto jest wymagane")]
         [MaxLength(100)]
         public string City { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Kod pocztowy jest wymagany")]
         [MaxLength(20)]
         public string PostalCode { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Kraj jest wymagany")]
         [MaxLength(100)]
         public string Country { get; set; }
 

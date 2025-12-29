@@ -15,6 +15,7 @@
                    id = "clientSelect",
                    onchange = "clientChanged(this)"
                })
+            @Html.ValidationMessageFor(m => m.Invoice.ClientId, "", new { @class = "text-danger" })
         </div>
         <div class="mt-3 mb-4">
             <strong>Adres: </strong> <span id="clientAddress"></span><br />
@@ -31,26 +32,28 @@
             <div class="col-6 mb-2">
                 @Html.LabelFor(m => m.Invoice.IssueDate, "Data wystawienia")
                 @Html.TextBoxFor(m => m.Invoice.IssueDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
-
+                @Html.ValidationMessageFor(m => m.Invoice.IssueDate, "", new { @class = "text-danger" })
             </div>
             <div class="col-6 mb-2">
                 @Html.LabelFor(m => m.Invoice.SaleDate, "Data sprzedaży")
                 @Html.TextBoxFor(m => m.Invoice.SaleDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
-
+                @Html.ValidationMessageFor(m => m.Invoice.SaleDate, "", new { @class = "text-danger" })
             </div>
             <div class="col-6 mb-2">
                 @Html.LabelFor(m => m.Invoice.DueDate, "Termin płatności")
                 @Html.TextBoxFor(m => m.Invoice.DueDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
-
+                @Html.ValidationMessageFor(m => m.Invoice.DueDate, "", new { @class = "text-danger" })
             </div>
             <div class="col-6">
                 @Html.LabelFor(m => m.Invoice.PaymentMethod, "Metoda płatności")
                 @Html.EditorFor(m => m.Invoice.PaymentMethod, new { htmlAttributes = new { @class = "form-control", Value = "Przelew" } })
+                @Html.ValidationMessageFor(m => m.Invoice.PaymentMethod, "", new { @class = "text-danger" })
             </div>
 
             <div class="col-6">
-                @Html.LabelFor(m => m.Invoice.Currency, "Metoda płatności")
+                @Html.LabelFor(m => m.Invoice.Currency, "Waluta")
                 @Html.EditorFor(m => m.Invoice.Currency, new { htmlAttributes = new { @class = "form-control", Value = "PLN" } })
+                @Html.ValidationMessageFor(m => m.Invoice.Currency, "", new { @class = "text-danger" })
             </div>
 
         </div>

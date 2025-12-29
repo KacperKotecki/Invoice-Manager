@@ -18,21 +18,21 @@ namespace Invoice_Manager.Models.Domains
         [Required]
         public int CompanyId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Nazwa Produktu / Usługi jest wymagana")]
         [MaxLength(255)]
         public string Name { get; set; }
 
         [MaxLength(1000)]
         public string Description { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Jednostka jest wymagana")]
         [MaxLength(20)]
         public string Unit { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Cena netto jest wymagana")]
         public decimal UnitPriceNet { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Stawka VAT jest wymagana")]
         public int DefaultTaxRateId { get; set; }
 
         [ForeignKey("CompanyId")]

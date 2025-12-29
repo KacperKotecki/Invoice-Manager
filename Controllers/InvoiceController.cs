@@ -5,6 +5,7 @@ using Invoice_Manager.Models.ViewModels;
 using Invoice_Manager.Repositories;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
+using Microsoft.Owin.Security.Cookies;
 using Rotativa;
 using System;
 using System.Collections.Generic;
@@ -62,6 +63,14 @@ namespace Invoice_Manager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create([Bind(Prefix = "Invoice")] Invoice invoice)
         {
+            RemoveSnapshotValidationErrors();
+
+            if (!ModelState.IsValid)
+            {
+                var vm = await PrepareInvoiceFormViewModel(invoice);
+                return View("Manage", vm);
+            }
+
             var companyId = await GetCurrentCompanyIdAsync();
             var company = await _companyRepository.GetCompanyByIdAsync(companyId);
             var client = await _clientRepository.GetClientByIdAsync(invoice.ClientId);
@@ -77,7 +86,6 @@ namespace Invoice_Manager.Controllers
 
             try
             {
-
                 _invoiceRepository.Add(invoice);
 
                 await _context.SaveChangesAsync();
@@ -106,6 +114,14 @@ namespace Invoice_Manager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit([Bind(Prefix = "Invoice")] Invoice invoice)
         {
+            RemoveSnapshotValidationErrors();
+
+            if (!ModelState.IsValid)
+            {
+                var vm = await PrepareInvoiceFormViewModel(invoice);
+                return View("Manage", vm);
+            }
+
             var companyId = await GetCurrentCompanyIdAsync();
             var company = await _companyRepository.GetCompanyByIdAsync(companyId);
             var client = await _clientRepository.GetClientByIdAsync(invoice.ClientId);
@@ -114,10 +130,8 @@ namespace Invoice_Manager.Controllers
 
             await _invoiceRepository.CalculateInvoiceTotals(invoice);
 
-
             try
             {
-
                 await _invoiceRepository.UpdateInvoiceAsync(invoice, company, client);
                 await _context.SaveChangesAsync();
 
@@ -244,6 +258,25 @@ namespace Invoice_Manager.Controllers
                 Products = products,
                 TaxRates = taxRates
             };
+        }
+        private void RemoveSnapshotValidationErrors()
+        {
+            ModelState.Remove("Invoice.InvoiceNumber");
+
+            // Company Snapshot Fields
+            ModelState.Remove("Invoice.Company_Name");
+            ModelState.Remove("Invoice.Company_TaxId");
+            ModelState.Remove("Invoice.Company_Street");
+            ModelState.Remove("Invoice.Company_City");
+            ModelState.Remove("Invoice.Company_PostalCode");
+            ModelState.Remove("Invoice.Company_BankName");
+            ModelState.Remove("Invoice.Company_BankAccount");
+
+            // Client Snapshot Fields
+            ModelState.Remove("Invoice.Client_Name");
+            ModelState.Remove("Invoice.Client_Street");
+            ModelState.Remove("Invoice.Client_City");
+            ModelState.Remove("Invoice.Client_PostalCode");
         }
         protected override void Dispose(bool disposing)
         {

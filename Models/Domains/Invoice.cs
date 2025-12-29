@@ -20,20 +20,20 @@ namespace Invoice_Manager.Models.Domains
         [Required]
         public int CompanyId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Pole klient jest wymagane")]
         public int ClientId { get; set; }
 
         [Required]
         [MaxLength(100)]
         public string InvoiceNumber { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Data wystawienia jest wymagana")]
         public DateTime IssueDate { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Termin płatności jest wymagany")]
         public DateTime DueDate { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Data sprzedaży jest wymagana")]
         public DateTime SaleDate { get; set; }
 
         [Required]
@@ -100,11 +100,11 @@ namespace Invoice_Manager.Models.Domains
             
         }
 
-        [Required]
+        [Required(ErrorMessage = "Waluta jest wymagana")]
         [MaxLength(5)]
         public string Currency { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Metoda płatności jest wymagana")]
         [MaxLength(100)]
         public string PaymentMethod { get; set; }
 
