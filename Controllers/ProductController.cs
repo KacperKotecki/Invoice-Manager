@@ -1,26 +1,19 @@
 ﻿using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.Mvc;
 using Invoice_Manager.Models;
 using Invoice_Manager.Models.Domains;
 using Invoice_Manager.Models.ViewModels;
 using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
 
 namespace Invoice_Manager.Controllers
 {
     [Authorize]
     public class ProductController : Controller
     {
-        private ApplicationDbContext _context;
-        private ApplicationUserManager _userManager;
-
-        public ProductController()
-        {
-            _context = new ApplicationDbContext();
-        }
+        private readonly ApplicationDbContext _context;
+        private readonly ApplicationUserManager _userManager;
 
         public ProductController(ApplicationDbContext context, ApplicationUserManager userManager)
         {
@@ -28,23 +21,11 @@ namespace Invoice_Manager.Controllers
             _userManager = userManager;
         }
 
-        public ApplicationUserManager UserManager
-        {
-            get
-            {
-                return _userManager ?? HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            }
-            private set
-            {
-                _userManager = value;
-            }
-        }
-
         // GET: Product
         public async Task<ActionResult> Index(string searchQuery = "")
         {
             var userId = User.Identity.GetUserId();
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId);
 
             var query = _context.Products
                 .Include(p => p.DefaultTaxRate)
@@ -71,9 +52,8 @@ namespace Invoice_Manager.Controllers
         public async Task<ActionResult> Create()
         {
             var userId = User.Identity.GetUserId();
-            var user = await UserManager.FindByIdAsync(userId);
-            
-            // Pobieramy firmę, aby znać jej kraj
+            var user = await _userManager.FindByIdAsync(userId);
+
             var company = await _context.Companies.FindAsync(user.CompanyId);
 
             await PopulateTaxRatesDropDownList(company.Country);
@@ -87,7 +67,7 @@ namespace Invoice_Manager.Controllers
         public async Task<ActionResult> Create(Product product)
         {
             var userId = User.Identity.GetUserId();
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId);
 
             product.CompanyId = user.CompanyId;
 
@@ -109,7 +89,7 @@ namespace Invoice_Manager.Controllers
             if (id == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
 
             var userId = User.Identity.GetUserId();
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId);
 
             var product = await _context.Products
                 .FirstOrDefaultAsync(p => p.ProductId == id && p.CompanyId == user.CompanyId);
@@ -128,7 +108,7 @@ namespace Invoice_Manager.Controllers
         public async Task<ActionResult> Edit(Product product)
         {
             var userId = User.Identity.GetUserId();
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId);
 
             if (!ModelState.IsValid)
             {
@@ -159,7 +139,7 @@ namespace Invoice_Manager.Controllers
             if (id == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
 
             var userId = User.Identity.GetUserId();
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId);
 
             var product = await _context.Products
                 .Include(p => p.DefaultTaxRate)
@@ -176,7 +156,7 @@ namespace Invoice_Manager.Controllers
         public async Task<ActionResult> DeleteConfirmed(int id)
         {
             var userId = User.Identity.GetUserId();
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId);
 
             var product = await _context.Products
                 .FirstOrDefaultAsync(p => p.ProductId == id && p.CompanyId == user.CompanyId);
@@ -205,24 +185,6 @@ namespace Invoice_Manager.Controllers
             }
 
             ViewBag.TaxRates = new SelectList(taxRates, "TaxRateId", "Name", selectedTaxRate);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                if (_context != null)
-                {
-                    _context.Dispose();
-                    _context = null;
-                }
-                if (_userManager != null)
-                {
-                    _userManager.Dispose();
-                    _userManager = null;
-                }
-            }
-            base.Dispose(disposing);
         }
     }
 }

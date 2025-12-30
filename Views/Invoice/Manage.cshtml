@@ -89,21 +89,7 @@
             }
         </div>
     </div>
-    @if (!ViewData.ModelState.IsValid)
-    {
-        <div class="alert alert-danger">
-            <h4><i class="fa fa-exclamation-triangle"></i> Błędy walidacji (Debug):</h4>
-            <ul>
-                @foreach (var key in ViewData.ModelState.Keys)
-                {
-                    foreach (var error in ViewData.ModelState[key].Errors)
-                    {
-                        <li><strong>@key</strong>: @error.ErrorMessage</li>
-                    }
-                }
-            </ul>
-        </div>
-    }
+    
 </div>
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")

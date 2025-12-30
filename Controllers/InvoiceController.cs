@@ -24,27 +24,30 @@ namespace Invoice_Manager.Controllers
     [Authorize]
     public class InvoiceController : Controller
     {
-        private ApplicationDbContext _context;
-        private ApplicationUserManager _userManager;
-        private InvoiceRepository _invoiceRepository;
-        private ClientRepository _clientRepository;
-        private CompanyRepository _companyRepository;
-        private ProductRepository _productRepository;
-        private TaxRateRepository _taxRateRepository;
-
-        public InvoiceController()
+        private readonly ApplicationDbContext _context;
+        private readonly ApplicationUserManager _userManager;
+        private readonly InvoiceRepository _invoiceRepository;
+        private readonly ClientRepository _clientRepository;
+        private readonly CompanyRepository _companyRepository;
+        private readonly ProductRepository _productRepository;
+        private readonly TaxRateRepository _taxRateRepository;
+        public InvoiceController(
+            ApplicationDbContext context,
+            ApplicationUserManager userManager,
+            InvoiceRepository invoiceRepository,
+            ClientRepository clientRepository,
+            CompanyRepository companyRepository,
+            ProductRepository productRepository,
+            TaxRateRepository taxRateRepository)
         {
-            _context = new ApplicationDbContext();
-            _userManager = System.Web.HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            _invoiceRepository = new InvoiceRepository(_context);
-            _clientRepository = new ClientRepository(_context);
-            _companyRepository = new CompanyRepository(_context);
-            _productRepository = new ProductRepository(_context);
-            _taxRateRepository = new TaxRateRepository(_context);
-
+            _context = context;
+            _userManager = userManager;
+            _invoiceRepository = invoiceRepository;
+            _clientRepository = clientRepository;
+            _companyRepository = companyRepository;
+            _productRepository = productRepository;
+            _taxRateRepository = taxRateRepository;
         }
-
-
         public async Task<ActionResult> Index(string searchQuery = null, InvoiceStatus? status = null)
         {
             var companyId = await GetCurrentCompanyIdAsync();
@@ -162,20 +165,6 @@ namespace Invoice_Manager.Controllers
             return RedirectToAction("Index");
         }
 
-        public async Task<ActionResult> DownloadPdf(int invoiceId)
-        {
-            var invoice = await _invoiceRepository.GetInvoiceByIdAsync(invoiceId);
-
-            if (invoice == null) 
-                return HttpNotFound();
-
-            return new ViewAsPdf("InvoicePdf", invoice)
-            {
-                FileName = $"Faktura_{invoice.InvoiceNumber.Replace("/", "_")}.pdf"
-            };
-        }
-
-
         private async Task<int> GetCurrentCompanyIdAsync()
         {
             var userId = User.Identity.GetUserId();
@@ -277,14 +266,6 @@ namespace Invoice_Manager.Controllers
             ModelState.Remove("Invoice.Client_Street");
             ModelState.Remove("Invoice.Client_City");
             ModelState.Remove("Invoice.Client_PostalCode");
-        }
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _context.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }

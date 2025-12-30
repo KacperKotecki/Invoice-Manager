@@ -15,32 +15,12 @@ namespace Invoice_Manager.Controllers
     public class PaymentController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private ApplicationUserManager _userManager;
+        private readonly ApplicationUserManager _userManager;
 
-        // Add a public property for UserManager with a custom getter
-        public ApplicationUserManager UserManager
-        {
-            get
-            {
-                return _userManager ?? HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            }
-            private set
-            {
-                _userManager = value;
-            }
-        }
-
-        // Parameterless constructor for default controller instantiation
-        public PaymentController()
-        {
-            _context = new ApplicationDbContext();
-        }
-
-        // Constructor for dependency injection (e.g., for testing)
         public PaymentController(ApplicationDbContext context, ApplicationUserManager userManager)
         {
             _context = context;
-            UserManager = userManager;
+            _userManager = userManager;
         }
 
         // POST: Payment/Add
@@ -50,7 +30,7 @@ namespace Invoice_Manager.Controllers
         {
             var userId = User.Identity.GetUserId();
            
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId);
 
             if (user == null)
             {                 
@@ -114,7 +94,7 @@ namespace Invoice_Manager.Controllers
         public async Task<ActionResult> GetPaymentsForInvoice(int invoiceId)
         {
             var userId = User.Identity.GetUserId();
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
                    return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);

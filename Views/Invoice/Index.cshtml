@@ -330,23 +330,29 @@
                                     data-invoice-number="@invoice.InvoiceNumber"
                                     data-invoice-total="@invoice.TotalGrossAmount.ToString()"
                                     onclick="openPaymentModal(this)">
-                                    <i class="fa fa-credit-card"></i>
-                                    Zarejestruj płatność
+                                <i class="fa fa-credit-card"></i>
+                                Zarejestruj płatność
                             </button>
 
                             <button class="btn btn-danger btn-sm"
                                     onclick="deleteInvoice(@invoice.InvoiceId, '@invoice.InvoiceNumber')">
-                                    <i class="fa fa-trash"></i> 
-                                    Usuń
+                                <i class="fa fa-trash"></i>
+                                Usuń
                             </button>
 
-                            <button 
-                                class="btn btn-primary btn-sm"
-                                onclick='window.location.href="@Url.Action("DownloadPdf", "Invoice", new { id = invoice.InvoiceId } )"'>
-                                <i class="fa fa-file"></i>
-                                Pobierz PDF
+                            <button class="btn btn-primary btn-sm"
+                                    onclick='window.location.href="@Url.Action("DownloadPdf", "Print", new { invoiceId = invoice.InvoiceId } )"'>
+                                <i class="fa fa-download"></i>
+                                Zapisz PDF
                             </button>
-                          
+
+                            <a class="btn btn-primary btn-sm"
+                               href="@Url.Action("ShowPdf", "Print", new { invoiceId = invoice.InvoiceId })"
+                               target="_blank">
+                                <i class="fa fa-file-text"></i>
+                                Drukuj
+                            </a>
+
                         </div>
                     </div>
                 </div>
