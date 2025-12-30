@@ -241,7 +241,8 @@ namespace Invoice_Manager.Controllers
                 message == ManageMessageId.RemoveLoginSuccess ? "The external login was removed."
                 : message == ManageMessageId.Error ? "An error has occurred."
                 : "";
-            var user = await _userManager.FindByIdAsync(User.Identity.GetUserId());
+            var user = await GetCurrentUser();
+
             if (user == null)
             {
                 return View("Error");
@@ -311,18 +312,12 @@ namespace Invoice_Manager.Controllers
         public async Task<ActionResult> CompanyProfile(CompleteProfileViewModel model)
         {
             if (!ModelState.IsValid)
-            {
                 return View(model);
-            }
-
-            var userId = User.Identity.GetUserId();
-            var user = await _userManager.Users.Include(u => u.Company)
-                                              .SingleOrDefaultAsync(u => u.Id == userId);
+            
+            var user = await GetCurrentUser();
 
             if (user == null || user.Company == null)
-            {
                 return View("Error");
-            }
 
             user.Company.CompanyName = model.CompanyName;
             user.Company.TaxId = model.TaxId;
@@ -340,8 +335,7 @@ namespace Invoice_Manager.Controllers
 
             if (result.Succeeded)
             {
-                ViewBag.StatusMessage = "Dane firmy zostały zaktualizowane.";
-                return View(model);
+                return RedirectToAction("Index", "Invoice");
             }
 
             AddErrors(result);
@@ -381,5 +375,14 @@ namespace Invoice_Manager.Controllers
             Error
         }
         #endregion
+
+        private async Task<ApplicationUser> GetCurrentUser()
+        {
+            var userId = User.Identity.GetUserId();
+            var user = await _userManager.FindByIdAsync(userId);
+            return user;
+        }
+
+        
     }
 }
