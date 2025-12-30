@@ -152,7 +152,6 @@ namespace Invoice_Manager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Delete(int invoiceId)
         {
-
             var invoice = await _invoiceRepository.GetInvoiceByIdAsync(invoiceId);
 
             if (invoice == null)
