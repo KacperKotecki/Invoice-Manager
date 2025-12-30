@@ -18,7 +18,7 @@
                     <div class="row">
                         <div class="col-6 mb-3">
                             <label class="form-label">Kwota (PLN)</label>
-                            <input type="number" class="form-control" name="Amount" step="0.01"
+                            <input type="number" class="form-control" name="Amount" step="0.01" min="0"
                                    value="@Model.RemainingAmount" required />
                         </div>
                         <div class="col-6 mb-3">
@@ -57,16 +57,16 @@
                     <div class="card-body py-2">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="text-muted">Wartoœæ faktury:</span>
-                            <span class="fw-bold">@Model.TotalGrossAmount.ToString("C")</span>
+                            <span class="fw-bold">@Model.TotalGrossAmount.ToString() z³</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center text-success">
                             <span>Wp³acono:</span>
-                            <span class="fw-bold">@Model.TotalPaid.ToString("C")</span>
+                            <span class="fw-bold">@Model.TotalPaid.ToString() z³</span>
                         </div>
                         <hr class="my-1" />
                         <div class="d-flex justify-content-between align-items-center @(Model.IsFullyPaid ? "text-success" : "text-danger")">
                             <span class="fw-bold">Pozosta³o do zap³aty:</span>
-                            <span class="fw-bold fs-5">@Model.RemainingAmount.ToString("C")</span>
+                            <span class="fw-bold fs-5">@Model.RemainingAmount.ToString() z³</span>
                         </div>
                     </div>
                 </div>
@@ -88,7 +88,7 @@
                             {
                                 <tr>
                                     <td>@payment.PaymentDate.ToString("dd-MM-yyyy")</td>
-                                    <td>@payment.Amount.ToString("C")</td>
+                                    <td>@payment.Amount.ToString() z³</td>
                                     <td>@payment.Method</td>
                                 </tr>
                             }
