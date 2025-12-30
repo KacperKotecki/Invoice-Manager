@@ -276,6 +276,7 @@
     <Compile Include="Models\ViewModels\LoginViewModel.cs" />
     <Compile Include="Models\ViewModels\ManageLoginsViewModel.cs" />
     <Compile Include="Models\ViewModels\ConfigureTwoFactorViewModel.cs" />
+    <Compile Include="Models\ViewModels\PaymentModalViewModel.cs" />
     <Compile Include="Models\ViewModels\ProductIndexViewModel.cs" />
     <Compile Include="Models\ViewModels\RegisterViewModel.cs" />
     <Compile Include="Models\ViewModels\ResetPasswordViewModel.cs" />
@@ -287,6 +288,8 @@
     <Compile Include="Repositories\ClientRepository.cs" />
     <Compile Include="Repositories\CompanyRepository.cs" />
     <Compile Include="Repositories\InvoiceRepository.cs" />
+    <Compile Include="Repositories\PaymentController.cs" />
+    <Compile Include="Repositories\PaymentRepository.cs" />
     <Compile Include="Repositories\ProductRepository.cs" />
     <Compile Include="Repositories\TaxRateRepository.cs" />
     <Compile Include="Startup.cs" />
@@ -377,10 +380,10 @@
     <Content Include="Views\Product\Index.cshtml" />
     <Content Include="Views\Invoice\Manage.cshtml" />
     <Content Include="Views\Print\InvoicePdf.cshtml" />
-    <Content Include="Views\Payment\_PaymentList.cshtml" />
     <Content Include="Views\Invoice\_InvoiceHeader.cshtml" />
     <Content Include="Views\Invoice\_InvoiceItems.cshtml" />
     <Content Include="Views\Invoice\_InvoiceSummary.cshtml" />
+    <Content Include="Views\Payment\_PaymentModalContent.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

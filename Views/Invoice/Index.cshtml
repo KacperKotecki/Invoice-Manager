@@ -75,9 +75,10 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         position: relative;
     }
-    .invoice-card .btn {
-        z-index: 1;
-    }
+
+        .invoice-card .btn {
+            z-index: 1;
+        }
 
 
 
@@ -162,7 +163,7 @@
     <h2 class="mb-0 text-white">@ViewBag.Title</h2>
     <button class="btn btn-success" onclick='window.location.href="@Url.Action("Create", "Invoice" )"'>
         <i class="fa fa-plus"></i>
-        Wystaw nową fakturę 
+        Wystaw nową fakturę
     </button>
 </div>
 
@@ -298,11 +299,11 @@
 
                     <div>
                         <a class="stretched-link text-decoration-none text-body" href="@Url.Action("Edit", "Invoice", new { invoiceId = invoice.InvoiceId })">
-                            <h5 >
+                            <h5>
                                 @invoice.InvoiceNumber
                             </h5>
                         </a>
-                        
+
 
                         <p class="mb-1">Dla: <strong>@invoice.ClientName</strong></p>
 
@@ -323,13 +324,8 @@
                         <div class="invoice-amount">@invoice.TotalGrossAmount.ToString() zł</div>
 
                         <div class="d-flex gap-2">
-
-
                             <button class="btn btn-success btn-sm"
-                                    data-invoice-id="@invoice.InvoiceId"
-                                    data-invoice-number="@invoice.InvoiceNumber"
-                                    data-invoice-total="@invoice.TotalGrossAmount.ToString()"
-                                    onclick="openPaymentModal(this)">
+                                    onclick="openPaymentModal(@invoice.InvoiceId)">
                                 <i class="fa fa-credit-card"></i>
                                 Zarejestruj płatność
                             </button>
@@ -416,131 +412,55 @@
         </div>
 
     </div>
+    
+    
+    <div id="paymentModalContainer"></div>
 
 
 
-    <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title"><i class="fa fa-money-bill-wave"></i> Zarejestruj płatność</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    @using (Html.BeginForm("Add", "Payment", FormMethod.Post))
-                    {
-                        @Html.AntiForgeryToken()
-
-
-                        <input type="hidden" id="paymentInvoiceId" name="InvoiceId" />
-
-                        <div class="mb-3">
-                            <label class="form-label">Faktura</label>
-                            <input type="text" class="form-control" id="paymentInvoiceNumber" readonly />
-                        </div>
-
-                        <div class="row">
-                            <div class="col-6 mb-3">
-                                <label class="form-label">Kwota (PLN)</label>
-                                <input type="number" class="form-control" id="paymentAmount" name="Amount" step="0.01" required oninput="validatePaymentAmount()" />
-                                <div id="paymentError" class="text-danger small fw-bold mt-1" style="display:none;"></div>
-                            </div>
-                            <div class="col-6 mb-3">
-                                <label class="form-label">Data wpłaty</label>
-                                <input type="date" class="form-control" name="PaymentDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Metoda</label>
-                            <select class="form-select" name="Method">
-                                <option value="Przelew">Przelew</option>
-                                <option value="Gotówka">Gotówka</option>
-                                <option value="Karta">Karta</option>
-                            </select>
-                        </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-success" id="btnSavePayment">Zapisz wpłatę</button>
-                        </div>
-                    }
-                    <hr />
-                    <h5>Istniejące wpłaty:</h5>
-                    <div id="miejsceNaTabele"></div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 @section Scripts {
 
     @Scripts.Render("~/bundles/jqueryval")
 
-    <script>
-        var maxPaymentAmount = 0;
+<script>
+    var maxPaymentAmount = 0;
 
-        function deleteInvoice(id, number) {
-            document.getElementById('deleteInvoiceId').value = id;
-            document.getElementById('deleteInvoiceNumber').innerText = number;
-            var myModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-            myModal.show();
-        }
+    function deleteInvoice(id, number)
+    {
+        document.getElementById('deleteInvoiceId').value = id;
+        document.getElementById('deleteInvoiceNumber').innerText = number;
+        var myModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+                    myModal.show();
+    }
 
+    function openPaymentModal(invoiceId)
+    {
 
+        var container = document.getElementById('paymentModalContainer');
 
-    function openPaymentModal(button) {
-
-        var id = button.getAttribute('data-invoice-id');
-        var number = button.getAttribute('data-invoice-number');
-        var totalGross = button.getAttribute('data-invoice-total');
-
-
-        document.getElementById('paymentInvoiceId').value = id;
-        document.getElementById('paymentInvoiceNumber').value = number;
-        document.getElementById('paymentAmount').value = totalGross;
-        maxPaymentAmount = parseFloat(totalGross);
-
-
-
-    var tableContainer = document.getElementById('miejsceNaTabele');
-    tableContainer.innerHTML = '<div class="text-center">Ładowanie listy wpłat...</div>'; // Informacja dla użytkownika
-
-   fetch('@Url.Action("GetPaymentsForInvoice", "Payment")?invoiceId=' + id)
+        fetch('@Url.Action("GetPaymentsForInvoice", "Payment")?invoiceId=' + invoiceId)
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Błąd sieci');
-            }
+            if (!response.ok) throw new Error('Błąd sieci');
             return response.text();
         })
         .then(html => {
-            tableContainer.innerHTML = html;
+            container.innerHTML = html;
+
+            var modalElement = document.getElementById('dynamicPaymentModal');
+            var myModal = new bootstrap.Modal(modalElement);
+            myModal.show();
         })
         .catch(error => {
             console.error('Błąd:', error);
-            tableContainer.innerHTML = '<div class="alert alert-danger">Nie udało się pobrać listy wpłat.</div>';
+            alert('Nie udało się załadować okna płatności.');
         });
+    }
 
 
-    var myModal = new bootstrap.Modal(document.getElementById('paymentModal'));
-    myModal.show();
-}
 
 
-        function validatePaymentAmount() {
-            var input = document.getElementById('paymentAmount');
-            var errorDiv = document.getElementById('paymentError');
-            var btn = document.getElementById('btnSavePayment');
-            var currentVal = parseFloat(input.value);
 
-            if (currentVal > maxPaymentAmount) {
-                errorDiv.style.display = 'block';
-                errorDiv.innerText = "Maksymalna kwota to: " + maxPaymentAmount.toFixed(2) + " zł";
-                btn.disabled = true;
-            } else {
-                errorDiv.style.display = 'none';
-                btn.disabled = false;
-            }
-        }
-    </script>
+</script>
 }

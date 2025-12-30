@@ -1,12 +1,11 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Mvc;
-using System.Data.Entity;
 using Invoice_Manager.Models;
 using Invoice_Manager.Models.Domains;
 using Invoice_Manager.Models.ViewModels;
+using Invoice_Manager.Repositories; // Dodano namespace
 using Microsoft.AspNet.Identity;
-using System.Web;
 using Microsoft.AspNet.Identity.Owin;
 
 namespace Invoice_Manager.Controllers
@@ -14,47 +13,33 @@ namespace Invoice_Manager.Controllers
     [Authorize]
     public class PaymentController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        // Zamiast DbContext, wstrzykujemy Repozytorium
+        private readonly PaymentRepository _paymentRepository;
         private readonly ApplicationUserManager _userManager;
 
-        public PaymentController(ApplicationDbContext context, ApplicationUserManager userManager)
+        public PaymentController(PaymentRepository paymentRepository, ApplicationUserManager userManager)
         {
-            _context = context;
+            _paymentRepository = paymentRepository;
             _userManager = userManager;
         }
 
-        // POST: Payment/Add
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Add(PaymentFormViewModel model)
         {
-            var userId = User.Identity.GetUserId();
-           
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await GetCurrentUser();
+            if (user == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
 
-            if (user == null)
-            {                 
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
-            }
+            var invoice = await _paymentRepository.GetInvoiceWithPaymentsAsync(model.InvoiceId, user.CompanyId);
 
-            var invoice = await _context.Invoices
-                .Include(i => i.Payments)
-                .FirstOrDefaultAsync(i => i.InvoiceId == model.InvoiceId && i.CompanyId == user.CompanyId);
-
-            if (invoice == null)
-            {
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
-            }
+            if (invoice == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
 
             var totalPaidSoFar = invoice.Payments.Sum(p => p.Amount);
             var remainingAmount = invoice.TotalGrossAmount - totalPaidSoFar;
 
             if (model.Amount > remainingAmount)
             {
-                
-                ModelState.AddModelError(nameof(model.Amount), $"Kwota wpłaty nie może być wyższa niż pozostała należność: {remainingAmount:C}.");
-
-                TempData["PaymentError"] = $"Kwota wpłaty nie może być wyższa niż pozostała należność: {remainingAmount:C}.";
+                TempData["PaymentError"] = $"Kwota wpłaty ({model.Amount:C}) nie może być wyższa niż pozostała należność: {remainingAmount:C}.";
                 return RedirectToAction("Index", "Invoice");
             }
 
@@ -66,12 +51,44 @@ namespace Invoice_Manager.Controllers
                 Method = model.Method
             };
 
-            _context.Payments.Add(payment);
-
+            _paymentRepository.AddPayment(payment);
             
-            var newTotalPaid = totalPaidSoFar + model.Amount;
+            UpdateInvoiceStatus(invoice, totalPaidSoFar + model.Amount);
 
-            if (newTotalPaid >= invoice.TotalGrossAmount)
+            await _paymentRepository.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Płatność została pomyślnie dodana.";
+            return RedirectToAction("Index", "Invoice");
+        }
+
+        public async Task<ActionResult> GetPaymentsForInvoice(int invoiceId)
+        {
+            var user = await GetCurrentUser();
+            if (user == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
+
+            var invoice = await _paymentRepository.GetInvoiceWithPaymentsAsync(invoiceId, user.CompanyId);
+
+            if (invoice == null) return HttpNotFound();
+
+            var payments = invoice.Payments.OrderByDescending(p => p.PaymentDate).ToList();
+
+            var viewModel = new PaymentModalViewModel
+            {
+                InvoiceId = invoice.InvoiceId,
+                InvoiceNumber = invoice.InvoiceNumber,
+                TotalGrossAmount = invoice.TotalGrossAmount,
+                TotalPaid = payments.Sum(p => p.Amount),
+                Payments = payments
+            };
+
+            return PartialView("_PaymentModalContent", viewModel);
+        }
+
+        // --- Metody Pomocnicze (Private Helpers) ---
+
+        private void UpdateInvoiceStatus(Invoice invoice, decimal totalPaid)
+        {
+            if (totalPaid >= invoice.TotalGrossAmount)
             {
                 invoice.Status = InvoiceStatus.Paid;
             }
@@ -83,32 +100,12 @@ namespace Invoice_Manager.Controllers
             {
                 invoice.Status = InvoiceStatus.Sent;
             }
-            
-
-            await _context.SaveChangesAsync();
-
-            
-            return RedirectToAction("Index", "Invoice");
         }
 
-        public async Task<ActionResult> GetPaymentsForInvoice(int invoiceId)
+        private async Task<ApplicationUser> GetCurrentUser()
         {
             var userId = User.Identity.GetUserId();
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
-            {
-                   return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
-            }
-
-            var payments = await _context.Payments
-               .Include(p => p.Invoice) // Jawnie dołączamy powiązaną fakturę
-               .Where(p => p.InvoiceId == invoiceId && p.Invoice.CompanyId == user.CompanyId)
-               .OrderByDescending(p => p.PaymentDate)
-               .ToListAsync();
-
-            return PartialView("_PaymentList", payments);
+            return await _userManager.FindByIdAsync(userId);
         }
-
-        
     }
 }
