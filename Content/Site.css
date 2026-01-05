@@ -18,3 +18,15 @@ select,
 textarea {
     max-width: 280px;
 }
+
+.privacyPoliceInfo {
+    font-size: 12px;
+    position: fixed;
+    bottom: 0;
+    background-color: #464646;
+    width: 100%;
+    color: white;
+    text-align: center;
+    padding: 5px 10px;
+    z-index: 2;
+}

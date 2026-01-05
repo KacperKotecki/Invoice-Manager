@@ -84,8 +84,6 @@ namespace Invoice_Manager.Controllers
             return PartialView("_PaymentModalContent", viewModel);
         }
 
-        // --- Metody Pomocnicze (Private Helpers) ---
-
         private void UpdateInvoiceStatus(Invoice invoice, decimal totalPaid)
         {
             if (totalPaid >= invoice.TotalGrossAmount)

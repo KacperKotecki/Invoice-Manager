@@ -37,8 +37,30 @@
         </footer>
     </div>
 
+    <div class="privacyPoliceInfo" style="display: none;">
+        Ten serwis wykorzystuje pliki cookies do prawidłowego działania, analizy ruchu oraz w celach bezpieczeństwa.
+        Korzystając ze strony, wyrażasz zgodę na ich używanie.
+
+        <button class="btn btn-primary btn-sm mx-3 my-1 privacyPoliceBtn" type="button" onclick="closePrivacyPolice()">Ok, rozumiem</button>
+    </div>
+
+
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)
+
+
 </body>
 </html>
+
+<script>
+    function closePrivacyPolice() {
+        $('.privacyPoliceInfo').css("display", "none");
+        $.cookie("privacyPolicy", "1", {path: '/', expires: 14})
+    }
+
+    $(document).ready(function () {
+        if($.cookie("privacyPolicy") !== "1")
+            $('.privacyPoliceInfo').css("display", "")
+    })
+</script>

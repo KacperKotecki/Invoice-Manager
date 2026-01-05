@@ -1,4 +1,5 @@
-﻿using Invoice_Manager.Models;
+﻿using Invoice_Manager.Filters;
+using Invoice_Manager.Models;
 using Invoice_Manager.Models.Domains;
 using Invoice_Manager.Repositories;
 using Microsoft.AspNet.Identity;
@@ -12,6 +13,8 @@ using System.Web.Mvc;
 
 namespace Invoice_Manager.Controllers
 {
+    [CheckProfileCompletion]
+    [Authorize]
     public class PrintController : Controller
     {
         private readonly ApplicationUserManager _userManager;

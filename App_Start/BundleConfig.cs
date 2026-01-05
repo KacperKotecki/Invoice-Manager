@@ -9,6 +9,7 @@ namespace Invoice_Manager
         public static void RegisterBundles(BundleCollection bundles)
         {
             bundles.Add(new ScriptBundle("~/bundles/jquery").Include(
+                        "~/Scripts/jquery.cookie.js",
                         "~/Scripts/jquery-{version}.js"));
 
 
@@ -27,7 +28,7 @@ namespace Invoice_Manager
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
                       "~/Content/bootstrap.css",
-                      "~/Content/site.css"));
+                      "~/Content/Site.css"));
         }
     }
 }

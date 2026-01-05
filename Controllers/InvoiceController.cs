@@ -20,7 +20,7 @@ using System.Web.Services.Protocols;
 
 namespace Invoice_Manager.Controllers
 {
-    [CheckProfileCompletion]
+    [CheckProfileCompletion]    
     [Authorize]
     public class InvoiceController : Controller
     {
