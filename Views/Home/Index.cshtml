@@ -2,35 +2,210 @@
     ViewBag.Title = "Strona główna";
 }
 
-<main>
-    <section class="row" aria-labelledby="aspnetTitle">
-        <h1 id="title">ASP.NET</h1>
-        <p class="lead col-10">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-        <p><a href="https://asp.net" class="btn btn-primary btn-md">Learn more &raquo;</a></p>
+<style>
+    /* Stylowanie dla efektu "Hero" */
+    .hero-section {
+        padding: 4rem 1rem;
+        text-align: center;
+        background: linear-gradient(135deg, rgba(13,110,253,0.1) 0%, rgba(13,110,253,0.0) 100%);
+        border-radius: 1rem;
+        margin-bottom: 3rem;
+        border: 1px solid rgba(13,110,253,0.1);
+    }
+
+    .hero-title {
+        font-weight: 800;
+        background: -webkit-linear-gradient(45deg, #0d6efd, #0dcaf0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+    }
+
+    /* Karty funkcji - lżejsze, z hover effectem */
+    .feature-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid rgba(255,255,255,0.1);
+        height: 100%;
+        background-color: var(--bs-body-bg); /* Respektuje dark/light mode */
+    }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            border-color: #0d6efd;
+        }
+
+    /* Ikony w kółeczkach z gradientem */
+    .icon-wrapper {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+    }
+
+    .icon-financial {
+        background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+        color: white;
+    }
+
+    .icon-payments {
+        background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+        color: white;
+    }
+
+    .icon-docs {
+        background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+        color: white;
+    }
+
+    .icon-legal {
+        background: linear-gradient(135deg, #6610f2 0%, #6f42c1 100%);
+        color: white;
+    }
+
+    .icon-tech {
+        background: linear-gradient(135deg, #d63384 0%, #dc3545 100%);
+        color: white;
+    }
+
+    .icon-security {
+        background: linear-gradient(135deg, #212529 0%, #495057 100%);
+        color: white;
+    }
+
+    /* Animacja wejścia */
+    .fade-in-up {
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translate3d(0, 40px, 0);
+        }
+
+        to {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+        }
+    }
+</style>
+
+<main class="fade-in-up">
+    <!-- HERO SECTION -->
+    <section class="hero-section" aria-labelledby="aspnetTitle">
+        <h1 id="title" class="display-3 hero-title">Invoice Manager B2B</h1>
+        <p class="lead col-md-8 mx-auto mb-4 text-muted">
+            Profesjonalny system do zarządzania obiegiem faktur. Kontroluj finanse, generuj dokumenty i oszczędzaj czas dzięki automatyzacji.
+        </p>
+
+        <div class="d-flex justify-content-center gap-3">
+            <button class="btn btn-primary btn-lg px-4 shadow-lg rounded-pill" onclick='window.location.href="@Url.Action("Index", "Invoice" )"'>
+                <i class="fa fa-rocket me-2"></i>
+                Uruchom Panel Główny
+            </button>
+            <button class="btn btn-outline-secondary btn-lg px-4 rounded-pill" onclick='window.location.href="@Url.Action("About", "Home")"'>
+                Dowiedz się więcej
+            </button>
+        </div>
     </section>
 
-    <div class="row">
-        <section class="col-md-4" aria-labelledby="gettingStartedTitle">
-            <h2 id="gettingStartedTitle">Getting started</h2>
-            <p>
-                ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
-                enables a clean separation of concerns and gives you full control over markup
-                for enjoyable, agile development.
-            </p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
-        </section>
-        <section class="col-md-4" aria-labelledby="librariesTitle">
-            <h2 id="librariesTitle">Get more libraries</h2>
-            <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
-        </section>
-        <section class="col-md-4" aria-labelledby="hostingTitle">
-            <h2 id="hostingTitle">Web Hosting</h2>
-            <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
-        </section>
-        
 
-        @*na jednej z podstron początkowych dodać etap tworzenia konta ładne bloczki i opisy *@
+    <div class="row g-4 mb-5">
+
+        <div class="col-md-4">
+            <div class="card feature-card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="icon-wrapper icon-financial shadow">
+                        <i class="fa fa-chart-line"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Finanse pod kontrolą</h5>
+                    <p class="card-text text-muted small">
+                        Błyskawiczny podgląd KPI. System analizuje przychody (30 dni), monitoruje płatności przeterminowane i sumuje zobowiązania.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card feature-card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="icon-wrapper icon-tech shadow">
+                        <i class="fa fa-cogs"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Solidna Architektura</h5>
+                    <p class="card-text text-muted small">
+                        Oparte na ASP.NET MVC 5 i Entity Framework 6. Wzorzec Repository Pattern zapewnia stabilność, skalowalność i czysty kod.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card feature-card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="icon-wrapper icon-security shadow">
+                        <i class="fa fa-user-shield"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Bezpieczeństwo danych</h5>
+                    <p class="card-text text-muted small">
+                        Snapshotting danych klienta, Soft Delete (kosz), blokady edycji faktur zamkniętych. Twoje dane są bezpieczne/
+                    </p>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-4">
+            <div class="card feature-card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="icon-wrapper icon-payments shadow">
+                        <i class="fa fa-wallet"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Płatności i Cash Flow</h5>
+                    <p class="card-text text-muted small">
+                        Pełna kontrola przepływów. Obsługa wpłat częściowych, historia transakcji i automatyczna aktualizacja statusów faktur.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card feature-card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="icon-wrapper icon-docs shadow">
+                        <i class="fa fa-file-invoice"></i> <!-- correction icon class -->
+                    </div>
+                    <h5 class="card-title fw-bold">Generator PDF</h5>
+                    <p class="card-text text-muted small">
+                        Automatyzacja dokumentów. Mapowanie danych, Humanizer (kwota słownie) i profesjonalne szablony PDF gotowe do druku.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card feature-card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="icon-wrapper icon-legal shadow">
+                        <i class="fa fa-balance-scale"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Zgodność prawna</h5>
+                    <p class="card-text text-muted small">
+                        Bezpieczeństwo podatkowe. Precyzyjne stawki VAT, obsługa mechanizmu Split Payment i poprawność danych wymaganych przez MF.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+
+
+
     </div>
+
+   
 </main>
