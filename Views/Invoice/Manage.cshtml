@@ -29,11 +29,12 @@
         TaxRateValue = i.TaxRateValue
     })));
 
-    var availableClients = @Html.Raw(JsonConvert.SerializeObject(Model.Clients.Select(c => new{
-        id = c.ClientId,
-        address = $"{c.Street} {c.PostalCode} {c.Country}",
-        taxId = c.TaxId
-    })))
+    var availableClients = @Html.Raw(JsonConvert.SerializeObject(Model.Clients.Select(c => new
+                      {
+                          id = c.ClientId,
+                          address = $"{c.Street} {c.PostalCode} {c.Country}",
+                          taxId = c.TaxId
+                      })));
 
 
 </script>
@@ -142,6 +143,17 @@
                 var row = button.closest('tr');
                 row.remove();
                 updateInvoiceTotal();
+                reindexInvoiceItems();
+            }
+
+            function reindexInvoiceItems() {
+                const rows = document.querySelectorAll("#invoiceItemsTable tbody tr");
+
+                rows.forEach((row, i) => {
+                    row.querySelectorAll("[name]").forEach(el => {
+                        el.name = el.name.replace(/Invoice\.InvoiceItems\[\d+\]/g, `Invoice.InvoiceItems[${i}]`);
+                    });
+                });
             }
 
             function productChanged(selectElement) {
